@@ -1,5 +1,3 @@
-import React, { useEffect, useState, useRef } from 'react';
-
 const hypothesisChecker = ({ viewsData, timeFrame }) => {
   const data = viewsData
     .map(item => ({
