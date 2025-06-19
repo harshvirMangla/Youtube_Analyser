@@ -52,3 +52,5 @@ const hypothesisChecker = ({ viewsData, timeFrame }) => {
     </div>
       );
 };
+
+export default hypothesisChecker;
