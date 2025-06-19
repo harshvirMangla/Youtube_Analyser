@@ -36,7 +36,7 @@ const hypothesisChecker = ({ viewsData, timeFrame }) => {
   const prevAvg = avg(prevData);
   const newAvg = avg(newData);
 
-  let result = "";
+  let result;
 
   if (prevAvg === 0) {
     result = `The youtuber doesn't have any videos uploaded before {cutoffDate}.}`
