@@ -1,5 +1,5 @@
 {
-  "name": "${PROJECT_NAME}",
+  "name": "Yt_Analyser",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -11,5 +11,12 @@
   "devDependencies": {
     "prettier": "^3.3.1",
     "vite": "^5.1.6"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "chart.js": "^4.5.0",
+    "react": "^19.1.0",
+    "react-chartjs-2": "^5.3.0",
+    "react-dom": "^19.1.0"
   }
 }

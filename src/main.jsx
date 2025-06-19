@@ -29,8 +29,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   </React.StrictMode>
 );
 
-import React, { useEffect, useState } from 'react';
-import { getChannelIdByUsername, getChannelVideoDetails } from '../API/youtube.js';
+import { getChannelIdByUsername, getChannelVideoDetails } from './API/youtube.js';
 
 function VideoViewsChart() {
   const [videoData, setVideoData] = useState([]);
