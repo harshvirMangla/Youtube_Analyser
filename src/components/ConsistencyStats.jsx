@@ -4,6 +4,7 @@ import { getChannelIdByUsername, api_key } from '../API/youtube.js';
 
 const API_KEY = api_key;
 const BASE_URL = 'https://www.googleapis.com/youtube/v3';
+const key = 'AIzaSyBmKerncsz6PJOozcUbd9TlP50WTYrq01c';
 
 const genAI = new GoogleGenerativeAI(key);
 
@@ -89,7 +90,13 @@ const ConsistencyChecker = ({ videoData }) => {
   }, [hasGenerated, videoData]);
 
   return (
-    <div style={{ background: '#ecf0f1', padding: '1rem', borderRadius: '15px', marginBottom: '1.5rem', animation: 'slideUp 0.8s ease-out' }}>
+    <div style={{
+      background: '#ececec',
+      padding: '1rem',
+      border: '3px solid #cd201f',
+      borderRadius: '15px',
+      marginBottom: '1.5rem',
+      animation: 'slideUp 0.8s ease-out' }}>
       <h3 style={{ marginBottom: '0.5rem', color: '#c8201f' }}>Consistency Stats</h3>
 
       {stats && (

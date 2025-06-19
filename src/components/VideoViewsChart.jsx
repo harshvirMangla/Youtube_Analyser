@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Line } from 'react-chartjs-2';
-import { getChannelIdByUsername, api_key } from '../API/youtube.js';
+import { api_key } from '../API/youtube.js';
 import ConsistencyChecker from './ConsistencyStats';
+import hypothesisChecker from './HypothesisChecker';
 import {
   CategoryScale,
   Chart as ChartJS,
@@ -12,6 +13,7 @@ import {
   Title,
   Tooltip,
 } from 'chart.js';
+import HypothesisChecker from './HypothesisChecker.jsx';
 
 ChartJS.register(
   CategoryScale,
@@ -62,6 +64,17 @@ const VideoViewsChart = () => {
   const [initButton, setInitButton] = useState(false);
   const [consistentButton, setConsistentButton] = useState(false);
   const [consistentButtonClicked, setConsistentButtonClicked] = useState(null);
+  const [hypothesisButton, setHypothesisButton] = useState(false);
+  const [hypothesisButtonClicked, setHypothesisButtonClicked] = useState(null);
+  const [showSplash, setShowSplash] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowSplash(false);
+    }, 2500);
+    return () => clearTimeout(timer);
+  }, []);
+
 
 
   const fetchChannelId = async (username) => {
@@ -200,6 +213,39 @@ const VideoViewsChart = () => {
     }
   };
 
+  if (showSplash) {
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '85vh',
+        backgroundColor: '#fff',
+        animation: 'fadeOut 1s ease 2s forwards'
+      }}>
+        <img
+          src="/yt-logo.png"
+          alt="YouTube Logo"
+          style={{ width: '500px', animation: 'logoPulse 4s infinite ease-in-out' }}
+        />
+
+        <style>{`
+          @keyframes logoPulse {
+            0% { transform: scale(1); opacity: 1; }
+            70% { transform: scale(1.4); opacity: 1; }
+            100% { transform: scale(1.8); opacity: 1; }
+          }
+          @keyframes fadeOut {
+            to {
+              opacity: 0;
+              visibility: hidden;
+            }
+          }
+        `}</style>
+      </div>
+    );
+  }
+
   return (
     <div style={{ maxWidth: '1630px', margin: '2rem auto', fontFamily: 'Segoe UI, sans-serif', animation: 'fadeIn 1s ease-in' }}>
       <h1 style={{ textAlign: 'center', fontSize: '2rem', color: '#cd201f', marginBottom: '1.5rem' }}>
@@ -231,13 +277,13 @@ const VideoViewsChart = () => {
       </div>
 
       {channelStats && (
-        <div style={{ background: '#ecf0f1', padding: '1.5rem', borderRadius: '15px', marginBottom: '1.5rem', animation: 'slideUp 0.8s ease-out' }}>
+        <div style={{ background: '#ececec', padding: '1.5rem', border: '3px solid #cd201f', borderRadius: '15px', marginBottom: '1.5rem', animation: 'slideUp 0.8s ease-out' }}>
           <h2 style={{ marginBottom: '0.5rem', color: '#c8201f' }}>{channelStats.title}</h2>
-          <p><strong>Channel Description:</strong> {channelStats.description}</p>
-          <p><strong>Published:</strong> {new Date(channelStats.publishedAt).toLocaleDateString()}</p>
-          <p><strong>Subscribers:</strong> {parseInt(channelStats.subscribers).toLocaleString()}</p>
-          <p><strong>Total Views:</strong> {parseInt(channelStats.totalViews).toLocaleString()}</p>
-          <p><strong>Total Videos:</strong> {channelStats.totalVideos}</p>
+          <p className="text"><strong>Channel Description:</strong> {channelStats.description}</p>
+          <p className="text"><strong>Published:</strong> {new Date(channelStats.publishedAt).toLocaleDateString()}</p>
+          <p className="text"><strong>Subscribers:</strong> {parseInt(channelStats.subscribers).toLocaleString()}</p>
+          <p className="text"><strong>Total Views:</strong> {parseInt(channelStats.totalViews).toLocaleString()}</p>
+          <p className="text"><strong>Total Videos:</strong> {channelStats.totalVideos}</p>
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
             <button
               onClick={async () => {
@@ -263,12 +309,33 @@ const VideoViewsChart = () => {
             >
               Consistency Checker
             </button>
+            <button
+              onClick={async () => {
+                setHypothesisButtonClicked(true);
+                setHypothesisButton(!hypothesisButton);
+                setTimeout(() => setHypothesisButtonClicked(false), 600);
+              }}
+              className={`action-button ${hypothesisButtonClicked ? 'clicked-effect' : ''}`}
+              style={{
+                marginLeft: 'auto',
+                cursor: (hypothesisButtonClicked && hypothesisButton) ? 'progress' : 'pointer',
+              }}
+            >
+              Growth Analysis
+            </button>
           </div>
         </div>
       )}
 
-      <div style={{ display: consistentButton ? 'block' : 'none' }}>
+      <div style={{ display: consistentButton ? 'block' : 'none' }} className="box">
         <ConsistencyChecker videoData={videoArtificialData} />
+      </div>
+
+      <div style={{ display: hypothesisButton ? 'block' : 'none' }}>
+        <HypothesisChecker
+          viewsData={videoArtificialData}
+          timeFrame="6months"
+        />
       </div>
 
 
@@ -281,58 +348,71 @@ const VideoViewsChart = () => {
       )}
 
       <style>{`
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(-10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-
-        @keyframes slideUp {
-          from { opacity: 0; transform: translateY(30px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-
-        @keyframes fadeInChart {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        
-        .action-button {
-        margin-top: 1rem;
-        padding: 0.6rem 1.2rem;
-        background-color: #cd201f;
-        color: white;
-        border: none;
-        border-radius: 15px;
-        cursor: pointer;
-        font-weight: 800;
-        font-size: 1rem;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      body {
+      background-color: #ffffff;
+      margin: 0;
+      padding: 0;
+      }
+      
+      @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+      }
+      
+      @keyframes slideUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+      }
+      
+      @keyframes fadeInChart {
+      from { opacity: 0; }
+      to { opacity: 1; }
+      }
+      
+      .box {}
+      
+      .text {
+      color: black;
+      }
+      
+      .action-button {
+      margin-top: 1rem;
+      padding: 0.6rem 1.2rem;
+      background-color: #cd201f;
+      color: white;
+      border: none;
+      border-radius: 15px;
+      cursor: pointer;
+      font-weight: 800;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
       }
       
       .action-button:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 0 20px rgba(190, 0, 0, 0.3);
+      transform: translateY(-1px);
+      box-shadow: 0 0 20px rgba(190, 0, 0, 0.3);
       }
       
       .clicked-effect {
-        animation: pressEffect 0.3s ease-out;
+      animation: pressEffect 0.3s ease-out;
       }
       
       @keyframes pressEffect {
-        0% {
-          transform: scale(1);
-          box-shadow: 0 0 25px rgba(190, 0, 0, 0.3);
-        }
-        50% {
-          transform: scale(1);
-          box-shadow: 0 0 30px rgba(190, 0, 0, 0.4);
-        }
-        100% {
-          transform: scale(1);
-          box-shadow: 0 0 25px rgba(190, 0, 0, 0.3);
-        }
+      0% {
+      transform: scale(1);
+      box-shadow: 0 0 25px rgba(190, 0, 0, 0.3);
       }
+      50% {
+      transform: scale(1);
+      box-shadow: 0 0 30px rgba(190, 0, 0, 0.4);
+      }
+      100% {
+      transform: scale(1);
+      box-shadow: 0 0 25px rgba(190, 0, 0, 0.3);
+      }
+      }
+       
       `}</style>
     </div>
   );
