@@ -4,7 +4,7 @@ import { getChannelIdByUsername, api_key } from '../API/youtube.js';
 
 const API_KEY = api_key;
 const BASE_URL = 'https://www.googleapis.com/youtube/v3';
-const key = 'AIzaSyC0ag8pvpepcqRDukZJIPVTnlYg0usI7FA';
+
 const genAI = new GoogleGenerativeAI(key);
 
 function calculatePercentile(arr, percentile) {
