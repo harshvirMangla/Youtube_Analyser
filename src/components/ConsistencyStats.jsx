@@ -96,7 +96,8 @@ const ConsistencyChecker = ({ videoData }) => {
       border: '3px solid #cd201f',
       borderRadius: '15px',
       marginBottom: '1.5rem',
-      animation: 'slideUp 0.8s ease-out' }}>
+      marginTop: '1.5rem',
+      animation: 'fadeIn 0.8s ease-out' }}>
       <h3 style={{ marginBottom: '0.5rem', color: '#c8201f' }}>Consistency Stats</h3>
 
       {stats && (

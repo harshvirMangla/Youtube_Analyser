@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Line } from 'react-chartjs-2';
-import { api_key } from '../API/youtube.js';
+import { getChannelIdByUsername, api_key } from '../API/youtube.js';
 import ConsistencyChecker from './ConsistencyStats';
-import hypothesisChecker from './HypothesisChecker';
+import HypothesisChecker from './HypothesisChecker.jsx';
+import GenerateHistogram from './Histogram.jsx';
 import {
   CategoryScale,
   Chart as ChartJS,
@@ -13,7 +14,7 @@ import {
   Title,
   Tooltip,
 } from 'chart.js';
-import HypothesisChecker from './HypothesisChecker.jsx';
+
 
 ChartJS.register(
   CategoryScale,
@@ -37,7 +38,7 @@ const generateMockVideoData = () => {
     return new Date(timestamp);
   };
 
-  const videoData = Array.from({ length: 10 }, (_, i) => ({
+  const videoData = Array.from({ length: 100 }, (_, i) => ({
     snippet: {
       title: `Video ${i + 1}`,
       publishedAt: randomDate().toISOString()
@@ -50,8 +51,33 @@ const generateMockVideoData = () => {
   return videoData;
 };
 
-const videoArtificialData = generateMockVideoData();
-console.log(videoArtificialData);
+function generateFakeYouTubeData(count = 100) {
+  const fakeData = [];
+
+  const now = new Date();
+  for (let i = 0; i < count; i++) {
+    const daysAgo = Math.floor(Math.random() * 365);
+    const date = new Date(now);
+    date.setDate(now.getDate() - daysAgo);
+
+    fakeData.push({
+      snippet: {
+        title: `Fake Video Title #${i + 1}`,
+        publishedAt: date.toISOString()
+      },
+      statistics: {
+        viewCount: (Math.random() * 1000000).toFixed(0)
+      }
+    });
+  }
+
+  return fakeData.sort((a, b) => new Date(a.snippet.publishedAt) - new Date(b.snippet.publishedAt));
+}
+
+
+// const videoArtificialData = generateMockVideoData();
+// const fakeYoutubeData = generateFakeYouTubeData(1000);
+// console.log(videoArtificialData);
 
 
 const VideoViewsChart = () => {
@@ -59,14 +85,21 @@ const VideoViewsChart = () => {
   const [channelId, setChannelId] = useState(null);
   const [channelStats, setChannelStats] = useState(null);
   const [chartData, setChartData] = useState(null);
+  const [chartOptions, setChartOptions] = useState(null);
   const [loadingChart, setLoadingChart] = useState(false);
   const [buttonClicked, setButtonClicked] = useState(false);
+  const [viewsChartButton, setViewsChartButton] = useState(false);
   const [initButton, setInitButton] = useState(false);
   const [consistentButton, setConsistentButton] = useState(false);
   const [consistentButtonClicked, setConsistentButtonClicked] = useState(null);
   const [hypothesisButton, setHypothesisButton] = useState(false);
   const [hypothesisButtonClicked, setHypothesisButtonClicked] = useState(null);
+  const [firstTimeFrameSelected, setFirstTimeFrameSelected] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
+  const [selectedTimeframe, setSelectedTimeframe] = useState(null);
+  const [timeframeButtonSelector, setTimeFrameButtonSelector] = useState(null);
+  const [animateHypothesis, setAnimateHypothesis] = useState(false);
+  const [videoArtificialData, setVideoArtificialData] = useState([]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -78,124 +111,253 @@ const VideoViewsChart = () => {
 
 
   const fetchChannelId = async (username) => {
-    // return await getChannelIdByUsername(username);
-    return 15;
+    return await getChannelIdByUsername(username);
+    // return 15;
   };
 
   const fetchChannelStats = async (id) => {
-    // const res = await fetch(`${BASE_URL}/channels?part=snippet,statistics&id=${id}&key=${API_KEY}`);
-    // const data = await res.json();
-    // const channel = data.items?.[0];
-    return {
-      title: 'Harshvir Mangla',
-      description: 'Attention is all you need!',
-      publishedAt: '10-09-2004',
-      subscribers: 82518391,
-      totalViews: 91818302634,
-      totalVideos: 155
-    }
+    const res = await fetch(`${BASE_URL}/channels?part=snippet,statistics&id=${id}&key=${API_KEY}`);
+    const data = await res.json();
+    const channel = data.items?.[0];
     // return {
-    //   title: channel.snippet.title,
-    //   description: channel.snippet.description,
-    //   publishedAt: channel.snippet.publishedAt,
-    //   subscribers: channel.statistics.subscriberCount,
-    //   totalViews: channel.statistics.viewCount,
-    //   totalVideos: channel.statistics.videoCount
+    //   title: 'Harshvir Mangla',
+    //   description: 'Attention is all you need!',
+    //   publishedAt: '10-09-2004',
+    //   subscribers: 82518391,
+    //   totalViews: 91818302634,
+    //   totalVideos: 155
     // }
+    return {
+      title: channel.snippet.title,
+      description: channel.snippet.description,
+      publishedAt: channel.snippet.publishedAt,
+      subscribers: channel.statistics.subscriberCount,
+      totalViews: channel.statistics.viewCount,
+      totalVideos: channel.statistics.videoCount
+    }
   }
 
   const fetchVideoStats = async (channelId) => {
     setLoadingChart(true);
     try {
-      // const searchRes = await fetch(
-      //   `${BASE_URL}/search?key=${API_KEY}&channelId=${channelId}&part=snippet,id&order=date&maxResults=1000`
-      // );
-      // console.log(searchRes.length);
-      // const searchData = await searchRes.json();
-      // const videoIds = searchData.items.map(item => item.id.videoId).join(',');
-      //
-      // const statsRes = await fetch(
-      //   `${BASE_URL}/videos?part=snippet,statistics&id=${videoIds}&key=${API_KEY}&maxResults=1000`
-      // );
-      // const statsData = await statsRes.json();
 
-      let videoIds = [];
-      let nextPageToken = null;
-      let fetchCount = 0;
+      // let allStats = [];
+      // console.log(`Stats Length: ${allStats.length}`);
+      if (!chartData) {
 
-      while (fetchCount < 30) {
-        console.log('I am running...');
+        let videoIds = [];
+        let nextPageToken = null;
+        let fetchCount = 0;
 
-        let url = `${BASE_URL}/search?key=${API_KEY}&channelId=${channelId}&part=snippet,id&type=video&maxResults=50`;
-        if (nextPageToken) {
-          url += `&pageToken=${nextPageToken}`;
-        }
+        while (fetchCount < 10) {
+          console.log('I am running...');
 
-        const searchRes = await fetch(url);
-        const searchData = await searchRes.json();
-
-        nextPageToken = searchData.nextPageToken || null;
-        console.log(searchData);
-        console.log(`Next Page Token: ${nextPageToken}`);
-
-        const ids = searchData.items
-          .filter(item => item.id.kind === 'youtube#video')
-          .map(item => item.id.videoId);
-
-        videoIds.push(...ids);
-
-
-        if(!nextPageToken) {break;}
-        fetchCount++;
-      }
-
-      const allStats = [];
-      for (let i = 0; i < videoIds.length; i += 50) {
-        const chunk = videoIds.slice(i, i + 50).join(',');
-        const statsRes = await fetch(
-          `${BASE_URL}/videos?part=snippet,statistics&id=${chunk}&key=${API_KEY}`
-        );
-        const statsData = await statsRes.json();
-        allStats.push(...statsData.items);
-      }
-
-      const sortedData = allStats
-        .map(video => ({
-          title: video.snippet.title,
-          views: parseInt(video.statistics.viewCount),
-          date: new Date(video.snippet.publishedAt).toLocaleDateString()
-        }))
-        .sort((a, b) => new Date(a.date) - new Date(b.date));
-
-      const movingAverage = (arr, windowSize) => {
-        const result = [];
-        for (let i = 0; i < arr.length; i++) {
-          const start = Math.max(0, i - windowSize + 1);
-          const subset = arr.slice(start, i + 1);
-          const avg = subset.reduce((acc, curr) => acc + curr, 0) / subset.length;
-          result.push(Math.round(avg));
-        }
-        return result;
-      }
-
-      const views = sortedData.map(video => video.views);
-      const movingAvgViews = movingAverage(views, 12);
-
-
-      setChartData({
-        labels: sortedData.map(video => video.date),
-        datasets: [
-          {
-            label: 'Views',
-            data: movingAvgViews,
-            borderColor: '#157a0b',
-            backgroundColor: 'rgba(62, 149, 205, 0.2)',
-            tension: 0.3,
-            pointRadius: 1,
-            borderWidth: 2
+          let url = `${BASE_URL}/search?key=${API_KEY}&channelId=${channelId}&part=snippet,id&type=video&maxResults=50`;
+          if (nextPageToken) {
+            url += `&pageToken=${nextPageToken}`;
           }
-        ]
-      });
+
+          const searchRes = await fetch(url);
+          const searchData = await searchRes.json();
+
+          nextPageToken = searchData.nextPageToken || null;
+          console.log(searchData);
+          console.log(`Next Page Token: ${nextPageToken}`);
+
+          const ids = searchData.items
+            .filter(item => item.id.kind === 'youtube#video')
+            .map(item => item.id.videoId);
+
+          videoIds.push(...ids);
+
+          if(!nextPageToken) {break;}
+          fetchCount++;
+        }
+
+        const allStats = [];
+        for (let i = 0; i < videoIds.length; i += 50) {
+          const chunk = videoIds.slice(i, i + 50).join(',');
+          const statsRes = await fetch(
+            `${BASE_URL}/videos?part=snippet,statistics&id=${chunk}&key=${API_KEY}`
+          );
+          const statsData = await statsRes.json();
+          allStats.push(...statsData.items);
+        }
+
+        // console.log("I don't have chart Data");
+        // allStats = generateFakeYouTubeData(1000);
+        // allStats = fakeYoutubeData;
+
+        let sortedData = allStats
+          .map(video => ({
+            title: video.snippet.title,
+            views: parseInt(video.statistics.viewCount),
+            dateObj: new Date(video.snippet.publishedAt)
+          }))
+          .sort((a, b) => a.dateObj - b.dateObj)
+          .map(video => ({
+            ...video,
+            date: video.dateObj.toLocaleDateString()
+          }));
+
+        setVideoArtificialData(allStats);
+
+        const movingAverage = (arr, windowSize) => {
+          const result = [];
+          for (let i = 0; i < arr.length; i++) {
+            const start = Math.max(0, i - windowSize + 1);
+            const subset = arr.slice(start, i + 1);
+            const avg = subset.reduce((acc, curr) => acc + curr, 0) / subset.length;
+            result.push(Math.round(avg));
+            // console.log(avg);
+          }
+          return result;
+        }
+
+        const views = sortedData.map(video => video.views);
+        let cumulative = 0;
+        let cumulativeViews = views.map(v => cumulative += v);
+
+        let movingAvgViews = movingAverage(views, 12);
+        // console.log(movingAvgViews);
+
+        if (sortedData.length > 40){
+          const step = Math.ceil(sortedData.length / 40);
+          sortedData = sortedData.filter((_, i) => i % step === 0);
+          movingAvgViews = movingAvgViews.filter((_, i) => i % step === 0);
+          cumulativeViews = cumulativeViews.filter((_, i) => i % step === 0);
+        }
+
+        const acHelper = (views) => {
+          const max = Math.max(...views);
+
+          if (max < 1000) return {number: 1, ac: ''}
+          else if (max < 1000000) return {number: 1000, ac: 'K'}
+          else if (max < 1000000000) return {number: 1000000, ac: 'M'}
+          else return {number: 1000000000, ac: 'B'};
+        }
+
+        const retCumulative = acHelper(cumulativeViews);
+        const retMoving = acHelper(movingAvgViews);
+
+        setChartData({
+          labels: sortedData.map(video => video.date),
+          datasets: [
+            {
+              label: 'Moving Average of Views',
+              data: movingAvgViews,
+              borderColor: '#cd1f20',
+              backgroundColor: 'rgba(205, 31, 32, 0.1)',
+              tension: 0.4,
+              pointRadius: 1.2,
+              borderWidth: 2,
+              fill: true,
+              yAxisID: 'y1',
+            },
+            {
+              label: 'Cumulative Views',
+              data: cumulativeViews,
+              borderColor: '#000',
+              backgroundColor: '#a5a5a5',
+              tension: 0.2,
+              pointRadius: 1.2,
+              borderWidth: 2,
+              yAxisID: 'y',
+            },
+          ],
+        });
+
+        setChartOptions({
+          responsive: true,
+          plugins: {
+            legend: {
+              display: true,
+              labels: {
+                color: '#333',
+                font: {
+                  size: 14,
+                  family: 'Segoe UI',
+                  weight: 'bold',
+                },
+              },
+            },
+            title: {
+              display: true,
+              text: 'Channel Growth Over Time',
+              color: '#cd1f20',
+              font: {
+                size: 25,
+                family: 'Segoe UI',
+                weight: 'bold',
+              },
+              padding: {
+                top: 10,
+                bottom: 30,
+              },
+            },
+            tooltip: {
+              callbacks: {
+                label: function (context) {
+                  return `Views: ${context.parsed.y.toLocaleString()}`;
+                },
+              },
+            },
+          },
+          scales: {
+            x: {
+              title: {
+                display: true,
+                text: 'Video Release Date',
+                color: '#333',
+                font: {
+                  size: 15,
+                  weight: 'bold',
+                },
+              },
+              ticks: {
+                color: '#333',
+                size: 10,
+                maxTicksLimit: 50,
+                autoSkip: true,
+                minRotation: 70,
+                maxRotation: 90,
+              },
+              grid: {
+                display: false,
+              },
+            },
+
+            y: {
+              position: 'left',
+              title: {
+                display: true,
+                text: 'Cumulative Views',
+              },
+              ticks: {
+                callback: (value) => `${(value / retCumulative.number).toFixed(0)}${retCumulative.ac}`,
+              },
+              grid: {
+                color: '#eee',
+              },
+            },
+            y1: {
+              position: 'right',
+              title: {
+                display: true,
+                text: 'Moving Average of Views',
+                color: '#cd1f20',
+              },
+              ticks: {
+                callback: (value) => `${(value / retMoving.number).toFixed(0)}${retMoving.ac}`,
+                color: '#cd1f20',
+              },
+              grid: {
+                drawOnChartArea: false,
+              },
+            },
+          },
+        });
+      }
     } catch (err) {
       console.error("Error fetching video chart data:", err);
     }
@@ -288,6 +450,7 @@ const VideoViewsChart = () => {
             <button
               onClick={async () => {
                 setButtonClicked(true);
+                setViewsChartButton(!viewsChartButton);
                 await fetchVideoStats(channelId);
                 setTimeout(() => setButtonClicked(false), 600);
               }}
@@ -312,7 +475,9 @@ const VideoViewsChart = () => {
             <button
               onClick={async () => {
                 setHypothesisButtonClicked(true);
+                if (hypothesisButton) setSelectedTimeframe(null);
                 setHypothesisButton(!hypothesisButton);
+
                 setTimeout(() => setHypothesisButtonClicked(false), 600);
               }}
               className={`action-button ${hypothesisButtonClicked ? 'clicked-effect' : ''}`}
@@ -327,23 +492,136 @@ const VideoViewsChart = () => {
         </div>
       )}
 
-      <div style={{ display: consistentButton ? 'block' : 'none' }} className="box">
+      {loadingChart && <p style={{ textAlign: 'center' }}>Loading chart...</p>}
+
+      {chartData && !loadingChart && (
+        <div style={{
+          background: '#fff',
+          padding: '1.5rem',
+          borderRadius: '12px',
+          border: '3px dashed #cd201f',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+          animation: 'fadeInChart 1s ease-in',
+          display: viewsChartButton ? 'block' : 'none',
+        }}
+        >
+          <Line data={chartData} options={chartOptions} />
+        </div>
+      )}
+
+      {(chartData && !loadingChart) && (
+        <div style={{
+          background: '#fff',
+          padding: '1.5rem',
+          borderRadius: '12px',
+          border: '3px dashed #cd201f',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+          animation: 'fadeInChart 1s ease-in',
+          marginTop: '1.5rem',
+          marginBottom: '1.5rem',
+          display: viewsChartButton ? 'block' : 'none',
+        }}
+        >
+          <GenerateHistogram data={videoArtificialData} binNumber={7}/>
+        </div>
+      )}
+
+      <div style={{ display: consistentButton ? 'block' : 'none' , marginTop: '1.5rem', marginBottom: '1.5rem'}} className="box">
         <ConsistencyChecker videoData={videoArtificialData} />
       </div>
 
       <div style={{ display: hypothesisButton ? 'block' : 'none' }}>
-        <HypothesisChecker
-          viewsData={videoArtificialData}
-          timeFrame="6months"
-        />
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            background: '#ececec',
+            alignItems: 'center',
+            border: '3px dashed #cd201f',
+            borderRadius: '12px',
+            padding: '1rem',
+            marginTop: '1.5rem',
+            marginBottom: '1.5rem',
+            boxShadow: '0 0 10px rgba(205, 32, 31, 0.1)'
+          }}
+        >
+          <div style={{ flex: 1 }}>
+            <h3 style={{ color: '#c8201f', margin: 0 }}>
+              Select Timeframe for Growth Analysis
+            </h3>
+          </div>
+
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button
+              style={{ backgroundColor: (timeframeButtonSelector === '1month') ? '#fd8d8d' : '#c8201f' }}
+              className='action-button innerHypothesis-button'
+              onClick={async () => {
+                setAnimateHypothesis(false);
+                setTimeFrameButtonSelector('1month');
+                setTimeout(() => {
+                  setSelectedTimeframe("1month");
+                  setHypothesisButtonClicked(false);
+                  setAnimateHypothesis(true);
+                }, firstTimeFrameSelected ? 500 : 0);
+                setFirstTimeFrameSelected(true);
+              }}
+            >1 Month</button>
+
+            <button
+              style={{ backgroundColor: (timeframeButtonSelector === '3months') ? '#fd8d8d' : '#c8201f' }}
+              className='action-button innerHypothesis-button'
+              onClick={async () => {
+                setAnimateHypothesis(false);
+                setTimeFrameButtonSelector('3months');
+                setTimeout(() => {
+                  setSelectedTimeframe("3months");
+                  setHypothesisButtonClicked(false);
+                  setAnimateHypothesis(true);
+                }, firstTimeFrameSelected ? 500 : 0);
+                setFirstTimeFrameSelected(true);
+              }}
+            >3 Months</button>
+
+            <button
+              style={{ backgroundColor: (timeframeButtonSelector === '6months') ? '#fd8d8d' : '#c8201f' }}
+              className='action-button innerHypothesis-button'
+              onClick={async () => {
+                setAnimateHypothesis(false);
+                setTimeFrameButtonSelector('6months');
+                setTimeout(() => {
+                  setSelectedTimeframe("6months");
+                  setHypothesisButtonClicked(false);
+                  setAnimateHypothesis(true);
+                }, firstTimeFrameSelected ? 500 : 0);
+                setFirstTimeFrameSelected(true);
+              }}
+            >6 Months</button>
+
+            <button
+              style={{ backgroundColor: (timeframeButtonSelector === '1year') ? '#fd8d8d' : '#c8201f' }}
+              className='action-button innerHypothesis-button'
+              onClick={async () => {
+                setAnimateHypothesis(false);
+                setTimeFrameButtonSelector('1year');
+                setTimeout(() => {
+                  setSelectedTimeframe("1year");
+                  setHypothesisButtonClicked(false);
+                  setAnimateHypothesis(true);
+                }, firstTimeFrameSelected ? 500 : 0);
+                setFirstTimeFrameSelected(true);
+              }}
+            >1 Year</button>
+          </div>
+        </div>
       </div>
 
-
-      {loadingChart && <p style={{ textAlign: 'center' }}>Loading chart...</p>}
-
-      {chartData && !loadingChart && (
-        <div style={{ background: '#fff', padding: '1.5rem', borderRadius: '10px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', animation: 'fadeInChart 1s ease-in' }}>
-          <Line data={chartData} />
+      {(hypothesisButton && selectedTimeframe) && (
+        <div style={{ display: hypothesisButton ? 'block' : 'none' }}
+        className={`hypothesis-wrapper ${animateHypothesis ? 'animate' : ''}`}>
+          <HypothesisChecker
+            viewsData={videoArtificialData}
+            timeFrame={selectedTimeframe}
+          />
         </div>
       )}
 
@@ -394,6 +672,30 @@ const VideoViewsChart = () => {
       box-shadow: 0 0 20px rgba(190, 0, 0, 0.3);
       }
       
+      .innerHypothesis-button {
+      margin-top: 1rem;
+      margin-bottom: 1rem;
+      margin-left: auto;
+      margin-right: auto;
+      }
+      
+      .innerHypothesis-button:hover {
+      transform: scale(1.03);
+      background-color: #fd8d8d;
+      }
+      
+      .hypothesis-wrapper {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.5s ease, transform 0.8s ease;
+      }
+      
+      .hypothesis-wrapper.animate {
+      opacity: 1;
+      transform: translateY(0);
+      transition: opacity 0.5s ease, transform 0.8s ease;
+      }
+
       .clicked-effect {
       animation: pressEffect 0.3s ease-out;
       }

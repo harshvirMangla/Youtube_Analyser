@@ -38,6 +38,7 @@ const HypothesisChecker = ({ viewsData, timeFrame }) => {
     }))
     .sort((a, b) => a.date - b.date);
 
+
   const now = new Date();
   let cutoffDate;
 
@@ -75,13 +76,21 @@ const HypothesisChecker = ({ viewsData, timeFrame }) => {
   if (prevData.length < 2) {
     result = `There are not enough videos before ${cutoffDate.toDateString()} for analysis.}`;
     error = true;
-  } else
+  } else {
     if (newData.length < 2) {
       result = `There are not enough videos after ${cutoffDate.toDateString()} for analysis.`;
       error = true;
+    }
   }
 
   const hasRun = useRef(false);
+
+  console.log(`Time frame: ${timeFrame}`);
+  console.log(`hasRun: ${hasRun.current}`);
+
+  useEffect(() => {
+    hasRun.current = false;
+  }, [timeFrame]);
 
   useEffect(() => {
     if (!hasRun.current && !error) {
@@ -90,14 +99,13 @@ const HypothesisChecker = ({ viewsData, timeFrame }) => {
       const {result, stats} = WelchSatterthwaiteTtest(prevData, prevVar, prevAvg, newData, newVar, newAvg);
       setTTestResult(result);
       setTestStats(stats);
-      console.log(testStats);
     }
-  }, [viewsData]);
+  }, [viewsData, timeFrame]);
 
   if (tTestResult === 1) {
     result = "The recent videos are performing significantly better at a 95% confidence level.";
   }
-  if (tTestResult === -1) {
+  else if (tTestResult === -1) {
     result = "The recent videos are performing significantly worse at a 95% confidence level.";
   }
   else if (tTestResult === 0) result = "No significant difference in performance has been detected at the 95% confidence level.";
