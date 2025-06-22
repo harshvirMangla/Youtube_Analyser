@@ -1,4 +1,5 @@
-
+// export const api_key = 'AIzaSyATeS6iVDMlemxXwMOUHrwvvGPGaWJEn_E';
+export const api_key = 'AIzaSyBltURIVOWgP5lVRIf8aDEWiyD4WlRwShM';
 const base_url = 'https://www.googleapis.com/youtube/v3';
 
 export async function getChannelIdByUsername(username) {

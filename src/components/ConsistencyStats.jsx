@@ -33,7 +33,8 @@ async function generateSummary(data) {
   - 50th percentile gap (median): ${p50.toFixed(2)} days
   - 75th percentile gap: ${p75.toFixed(2)} days
   
-  Write a concise, professional and human-like summary (3–4 sentences) analyzing the channel's upload consistency. Mention whether the channel uploads regularly, occasionally, or irregularly, and infer the overall upload discipline.
+  Write a detailed, highly professional and human-like summary analyzing the channel's upload consistency. Mention whether the channel uploads regularly, occasionally, or irregularly, and infer the overall upload discipline.
+  Do not use Markdown, asterisks, or any special formatting.
     `;
 
   const result = await model.generateContent(prompt);
@@ -50,7 +51,7 @@ const ConsistencyChecker = ({ videoData }) => {
   useEffect(() => {
     if (!hasGenerated.current && videoData.length > 1) {
       hasGenerated.current = true;
-      console.log('Happening');
+      // console.log('Happening');
       const dates = videoData
         .map(video => new Date(video.snippet.publishedAt))
         .sort((a, b) => a - b);
@@ -113,7 +114,7 @@ const ConsistencyChecker = ({ videoData }) => {
 
       <h3 style={{ marginTop: '2rem', color: '#c8201f' }}>
         Consistency Summary</h3>
-      {loading ? <p>Generating summary...</p> : <p>{summary}</p>}
+      {loading ? <p>Generating summary...</p> : <p style={{ lineHeight: '1.6', fontSize: '18px' }}>{summary}</p>}
     </div>
   );
 };

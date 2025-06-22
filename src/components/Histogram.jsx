@@ -20,7 +20,7 @@ ChartJS.register(
   Legend
 );
 
-const GenerateHistogram = ({data, binNumber = 10}) => {
+const GenerateHistogram = React.memo(({data, binNumber = 10}) => {
   const views = data.map(v => v.statistics.viewCount);
 
   const max = Math.max(...views);
@@ -50,7 +50,7 @@ const GenerateHistogram = ({data, binNumber = 10}) => {
 
   const binSize = getNiceBinSize(rawBinSize);
   const binCount = Math.ceil((max - min) / binSize);
-  console.log(max, min, binCount);
+  // console.log(max, min, binCount);
 
   const bins = new Array(binCount).fill(0);
 
@@ -59,7 +59,7 @@ const GenerateHistogram = ({data, binNumber = 10}) => {
     bins[binIndex]++;
   });
 
-  console.log(bins);
+  // console.log(bins);
 
   const labelHelper = (binSize) => {
     if (binSize <= 1000) {
@@ -80,8 +80,8 @@ const GenerateHistogram = ({data, binNumber = 10}) => {
     return `${(i * binSize) / number}${ac} - ${((i + 1) * binSize) / number}${ac}`;
   })
 
-  console.log(labels);
-  console.log(bins.length, labels.length);
+  // console.log(labels);
+  // console.log(bins.length, labels.length);
 
   const chartData = {
     labels,
@@ -150,6 +150,6 @@ const GenerateHistogram = ({data, binNumber = 10}) => {
   return (
     <Bar data={chartData} options={chartOptions} />
   );
-};
+});
 
 export default GenerateHistogram;

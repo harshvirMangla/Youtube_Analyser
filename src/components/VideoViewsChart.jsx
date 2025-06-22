@@ -4,6 +4,8 @@ import { getChannelIdByUsername, api_key } from '../API/youtube.js';
 import ConsistencyChecker from './ConsistencyStats';
 import HypothesisChecker from './HypothesisChecker.jsx';
 import GenerateHistogram from './Histogram.jsx';
+import ScatterPlot, { precisionFinder, makeTicks } from './ScatterPlot.jsx';
+import GetLists from './DisplaySection.jsx';
 import {
   CategoryScale,
   Chart as ChartJS,
@@ -57,16 +59,22 @@ function generateFakeYouTubeData(count = 100) {
   const now = new Date();
   for (let i = 0; i < count; i++) {
     const daysAgo = Math.floor(Math.random() * 365);
+
     const date = new Date(now);
     date.setDate(now.getDate() - daysAgo);
+
+    const randomHour = Math.floor(Math.random() * 24);
+    const randomMinute = Math.floor(Math.random() * 60);
+    const randomSecond = Math.floor(Math.random() * 60);
+    date.setHours(randomHour, randomMinute, randomSecond);
 
     fakeData.push({
       snippet: {
         title: `Fake Video Title #${i + 1}`,
-        publishedAt: date.toISOString()
+        publishedAt: date.toISOString(),
       },
       statistics: {
-        viewCount: (Math.random() * 1000000).toFixed(0)
+        viewCount: (Math.random() * 1000000).toFixed(0),
       }
     });
   }
@@ -111,30 +119,30 @@ const VideoViewsChart = () => {
 
 
   const fetchChannelId = async (username) => {
-    return await getChannelIdByUsername(username);
-    // return 15;
+    // return await getChannelIdByUsername(username);
+    return 15;
   };
 
   const fetchChannelStats = async (id) => {
-    const res = await fetch(`${BASE_URL}/channels?part=snippet,statistics&id=${id}&key=${API_KEY}`);
-    const data = await res.json();
-    const channel = data.items?.[0];
-    // return {
-    //   title: 'Harshvir Mangla',
-    //   description: 'Attention is all you need!',
-    //   publishedAt: '10-09-2004',
-    //   subscribers: 82518391,
-    //   totalViews: 91818302634,
-    //   totalVideos: 155
-    // }
+    // const res = await fetch(`${BASE_URL}/channels?part=snippet,statistics&id=${id}&key=${API_KEY}`);
+    // const data = await res.json();
+    // const channel = data.items?.[0];
     return {
-      title: channel.snippet.title,
-      description: channel.snippet.description,
-      publishedAt: channel.snippet.publishedAt,
-      subscribers: channel.statistics.subscriberCount,
-      totalViews: channel.statistics.viewCount,
-      totalVideos: channel.statistics.videoCount
+      title: 'Harshvir Mangla',
+      description: 'Attention is all you need!',
+      publishedAt: '10-09-2004',
+      subscribers: 82518391,
+      totalViews: 91818302634,
+      totalVideos: 155
     }
+    // return {
+    //   title: channel.snippet.title,
+    //   description: channel.snippet.description,
+    //   publishedAt: channel.snippet.publishedAt,
+    //   subscribers: channel.statistics.subscriberCount,
+    //   totalViews: channel.statistics.viewCount,
+    //   totalVideos: channel.statistics.videoCount
+    // }
   }
 
   const fetchVideoStats = async (channelId) => {
@@ -145,48 +153,47 @@ const VideoViewsChart = () => {
       // console.log(`Stats Length: ${allStats.length}`);
       if (!chartData) {
 
-        let videoIds = [];
-        let nextPageToken = null;
-        let fetchCount = 0;
-
-        while (fetchCount < 10) {
-          console.log('I am running...');
-
-          let url = `${BASE_URL}/search?key=${API_KEY}&channelId=${channelId}&part=snippet,id&type=video&maxResults=50`;
-          if (nextPageToken) {
-            url += `&pageToken=${nextPageToken}`;
-          }
-
-          const searchRes = await fetch(url);
-          const searchData = await searchRes.json();
-
-          nextPageToken = searchData.nextPageToken || null;
-          console.log(searchData);
-          console.log(`Next Page Token: ${nextPageToken}`);
-
-          const ids = searchData.items
-            .filter(item => item.id.kind === 'youtube#video')
-            .map(item => item.id.videoId);
-
-          videoIds.push(...ids);
-
-          if(!nextPageToken) {break;}
-          fetchCount++;
-        }
-
-        const allStats = [];
-        for (let i = 0; i < videoIds.length; i += 50) {
-          const chunk = videoIds.slice(i, i + 50).join(',');
-          const statsRes = await fetch(
-            `${BASE_URL}/videos?part=snippet,statistics&id=${chunk}&key=${API_KEY}`
-          );
-          const statsData = await statsRes.json();
-          allStats.push(...statsData.items);
-        }
+        // let videoIds = [];
+        // let nextPageToken = null;
+        // let fetchCount = 0;
+        //
+        // while (fetchCount < 10) {
+        //   console.log('I am running...');
+        //
+        //   let url = `${BASE_URL}/search?key=${API_KEY}&channelId=${channelId}&part=snippet,id&type=video&maxResults=50`;
+        //   if (nextPageToken) {
+        //     url += `&pageToken=${nextPageToken}`;
+        //   }
+        //
+        //   const searchRes = await fetch(url);
+        //   const searchData = await searchRes.json();
+        //
+        //   nextPageToken = searchData.nextPageToken || null;
+        //   // console.log(searchData);
+        //   // console.log(`Next Page Token: ${nextPageToken}`);
+        //
+        //   const ids = searchData.items
+        //     .filter(item => item.id.kind === 'youtube#video')
+        //     .map(item => item.id.videoId);
+        //
+        //   videoIds.push(...ids);
+        //
+        //   if(!nextPageToken) {break;}
+        //   fetchCount++;
+        // }
+        //
+        // const allStats = [];
+        // for (let i = 0; i < videoIds.length; i += 50) {
+        //   const chunk = videoIds.slice(i, i + 50).join(',');
+        //   const statsRes = await fetch(
+        //     `${BASE_URL}/videos?part=snippet,statistics&id=${chunk}&key=${API_KEY}`
+        //   );
+        //   const statsData = await statsRes.json();
+        //   allStats.push(...statsData.items);
+        // }
 
         // console.log("I don't have chart Data");
-        // allStats = generateFakeYouTubeData(1000);
-        // allStats = fakeYoutubeData;
+        const allStats = generateFakeYouTubeData(100);
 
         let sortedData = allStats
           .map(video => ({
@@ -239,6 +246,15 @@ const VideoViewsChart = () => {
 
         const retCumulative = acHelper(cumulativeViews);
         const retMoving = acHelper(movingAvgViews);
+
+        const ticksMoving = makeTicks(movingAvgViews, 10, true);
+        const ticksCumulative = makeTicks(cumulativeViews, 7, true);
+
+        const precisionMoving = precisionFinder(ticksMoving);
+        const precisionCumulative = precisionFinder(ticksCumulative);
+        // console.log("The following are the ticks:");
+        // console.log(ticksMoving, ticksCumulative);
+        // console.log(precisionMoving, precisionCumulative);
 
         setChartData({
           labels: sortedData.map(video => video.date),
@@ -333,8 +349,11 @@ const VideoViewsChart = () => {
                 display: true,
                 text: 'Cumulative Views',
               },
+              min: 0,
+              max: Math.max(...ticksCumulative),
               ticks: {
-                callback: (value) => `${(value / retCumulative.number).toFixed(0)}${retCumulative.ac}`,
+                stepSize: ticksCumulative[1] - ticksCumulative[0],
+                callback: (value) => `${(value / retCumulative.number).toFixed(precisionCumulative)}${retCumulative.ac}`,
               },
               grid: {
                 color: '#eee',
@@ -347,8 +366,11 @@ const VideoViewsChart = () => {
                 text: 'Moving Average of Views',
                 color: '#cd1f20',
               },
+              min: 0,
+              max: Math.max(...ticksMoving),
               ticks: {
-                callback: (value) => `${(value / retMoving.number).toFixed(0)}${retMoving.ac}`,
+                stepSize: ticksMoving[1] - ticksMoving[0],
+                callback: (value) => `${(value / retMoving.number).toFixed(precisionMoving)}${retMoving.ac}`,
                 color: '#cd1f20',
               },
               grid: {
@@ -460,6 +482,7 @@ const VideoViewsChart = () => {
             </button>
             <button
               onClick={async () => {
+                await fetchVideoStats(channelId);
                 setConsistentButtonClicked(true);
                 setConsistentButton(!consistentButton);
                 setTimeout(() => setConsistentButtonClicked(false), 600);
@@ -475,7 +498,10 @@ const VideoViewsChart = () => {
             <button
               onClick={async () => {
                 setHypothesisButtonClicked(true);
-                if (hypothesisButton) setSelectedTimeframe(null);
+                if (hypothesisButton) {
+                  setSelectedTimeframe(null);
+                  setTimeFrameButtonSelector(null);
+                }
                 setHypothesisButton(!hypothesisButton);
 
                 setTimeout(() => setHypothesisButtonClicked(false), 600);
@@ -492,7 +518,7 @@ const VideoViewsChart = () => {
         </div>
       )}
 
-      {loadingChart && <p style={{ textAlign: 'center' }}>Loading chart...</p>}
+      {(loadingChart && buttonClicked) && <p style={{ textAlign: 'center' }}>Loading chart...</p>}
 
       {chartData && !loadingChart && (
         <div style={{
@@ -523,6 +549,23 @@ const VideoViewsChart = () => {
         }}
         >
           <GenerateHistogram data={videoArtificialData} binNumber={7}/>
+        </div>
+      )}
+
+      {(chartData && !loadingChart) && (
+        <div style={{
+          background: '#fff',
+          padding: '1.5rem',
+          borderRadius: '12px',
+          border: '3px dashed #cd201f',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+          animation: 'fadeInChart 1s ease-in',
+          marginTop: '1.5rem',
+          marginBottom: '1.5rem',
+          display: viewsChartButton ? 'block' : 'none',
+        }}
+        >
+          <ScatterPlot videosData={videoArtificialData} />
         </div>
       )}
 
@@ -631,28 +674,28 @@ const VideoViewsChart = () => {
       margin: 0;
       padding: 0;
       }
-      
+
       @keyframes fadeIn {
       from { opacity: 0; transform: translateY(-10px); }
       to { opacity: 1; transform: translateY(0); }
       }
-      
+
       @keyframes slideUp {
       from { opacity: 0; transform: translateY(30px); }
       to { opacity: 1; transform: translateY(0); }
       }
-      
+
       @keyframes fadeInChart {
       from { opacity: 0; }
       to { opacity: 1; }
       }
-      
+
       .box {}
-      
+
       .text {
       color: black;
       }
-      
+
       .action-button {
       margin-top: 1rem;
       padding: 0.6rem 1.2rem;
@@ -666,30 +709,30 @@ const VideoViewsChart = () => {
       transition: all 0.3s ease;
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
       }
-      
+
       .action-button:hover {
       transform: translateY(-1px);
       box-shadow: 0 0 20px rgba(190, 0, 0, 0.3);
       }
-      
+
       .innerHypothesis-button {
       margin-top: 1rem;
       margin-bottom: 1rem;
       margin-left: auto;
       margin-right: auto;
       }
-      
+
       .innerHypothesis-button:hover {
       transform: scale(1.03);
       background-color: #fd8d8d;
       }
-      
+
       .hypothesis-wrapper {
       opacity: 0;
       transform: translateY(20px);
       transition: opacity 0.5s ease, transform 0.8s ease;
       }
-      
+
       .hypothesis-wrapper.animate {
       opacity: 1;
       transform: translateY(0);
@@ -699,7 +742,7 @@ const VideoViewsChart = () => {
       .clicked-effect {
       animation: pressEffect 0.3s ease-out;
       }
-      
+
       @keyframes pressEffect {
       0% {
       transform: scale(1);
@@ -714,7 +757,7 @@ const VideoViewsChart = () => {
       box-shadow: 0 0 25px rgba(190, 0, 0, 0.3);
       }
       }
-       
+
       `}</style>
     </div>
   );
