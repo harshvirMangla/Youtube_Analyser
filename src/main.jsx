@@ -59,16 +59,17 @@ import ReactDOM from 'react-dom/client';
 import App from './App.jsx';
 import { BrowserRouter } from 'react-router-dom';
 import { VideoDataProvider } from './context/VideoDataContext.jsx';
+import { AppProvider } from './context/AppContext.jsx';
 import './index.css';
-
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <BrowserRouter>
-      <VideoDataProvider>
-        <App />
-      </VideoDataProvider>
+      <AppProvider>
+        <VideoDataProvider>
+          <App />
+        </VideoDataProvider>
+      </AppProvider>
     </BrowserRouter>
   </React.StrictMode>
 );
-

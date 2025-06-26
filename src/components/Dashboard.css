@@ -1,0 +1,14 @@
+.btn {
+    background-color: #cd201f;
+    color: #fff;
+    padding: 0.8rem 1.2rem;
+    border-radius: 8px;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+    box-shadow: 3px 3px 6px rgba(192, 34, 34, 0.2);
+    display: flex;
+    justify-content: space-between;
+}

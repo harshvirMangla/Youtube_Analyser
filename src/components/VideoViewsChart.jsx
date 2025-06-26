@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Line } from 'react-chartjs-2';
 import { useNavigate } from 'react-router-dom';
 import { getChannelIdByUsername, api_key } from '../API/youtube.js';
@@ -8,7 +8,10 @@ import GenerateHistogram from './Histogram.jsx';
 import ScatterPlot, { precisionFinder, makeTicks } from './ScatterPlot.jsx';
 import GetLists from './DisplaySection.jsx';
 import Input from './InputSection';
+import Dashboard from './Dashboard';
 import { useVideoData } from "../context/VideoDataContext.jsx";
+import { AppContext } from '../context/AppContext';
+
 import {
   CategoryScale,
   Chart as ChartJS,
@@ -92,28 +95,55 @@ function generateFakeYouTubeData(count = 100) {
 
 
 const VideoViewsChart = () => {
-  const [username, setUsername] = useState('');
-  const [channelId, setChannelId] = useState(null);
-  const [channelStats, setChannelStats] = useState(null);
-  const [chartData, setChartData] = useState(null);
-  const [chartOptions, setChartOptions] = useState(null);
-  const [loadingChart, setLoadingChart] = useState(false);
-  const [buttonClicked, setButtonClicked] = useState(false);
-  const [viewsChartButton, setViewsChartButton] = useState(false);
-  const [initButton, setInitButton] = useState(false);
-  const [consistentButton, setConsistentButton] = useState(false);
-  const [consistentButtonClicked, setConsistentButtonClicked] = useState(null);
-  const [hypothesisButton, setHypothesisButton] = useState(false);
-  const [hypothesisButtonClicked, setHypothesisButtonClicked] = useState(null);
-  const [firstTimeFrameSelected, setFirstTimeFrameSelected] = useState(false);
-  const [showSplash, setShowSplash] = useState(true);
-  const [selectedTimeframe, setSelectedTimeframe] = useState(null);
-  const [timeframeButtonSelector, setTimeFrameButtonSelector] = useState(null);
-  const [animateHypothesis, setAnimateHypothesis] = useState(false);
-  const [videoArtificialData, setVideoArtificialData] = useState([]);
-  const [inputChanged, setInputChanged] = useState(false);
-  const [shouldNavigate, setShouldNavigate] = useState(false);
-  const [isNavigating, setIsNavigating] = useState(false);
+
+  const {
+    username,
+    setUsername,
+    channelId,
+    setChannelId,
+    channelStats,
+    setChannelStats,
+    chartData,
+    setChartData,
+    chartOptions,
+    setChartOptions,
+    loadingChart,
+    setLoadingChart,
+    buttonClicked,
+    setButtonClicked,
+    viewsChartButton,
+    setViewsChartButton,
+    initButton,
+    setInitButton,
+    consistentButton,
+    setConsistentButton,
+    consistentButtonClicked,
+    setConsistentButtonClicked,
+    hypothesisButton,
+    setHypothesisButton,
+    hypothesisButtonClicked,
+    setHypothesisButtonClicked,
+    firstTimeFrameSelected,
+    setFirstTimeFrameSelected,
+    showSplash,
+    setShowSplash,
+    selectedTimeframe,
+    setSelectedTimeframe,
+    timeframeButtonSelector,
+    setTimeFrameButtonSelector,
+    animateHypothesis,
+    setAnimateHypothesis,
+    videoArtificialData,
+    setVideoArtificialData,
+    inputChanged,
+    setInputChanged,
+    shouldNavigate,
+    setShouldNavigate,
+    isNavigating,
+    setIsNavigating,
+    shouldNavigateToChannelStats,
+    setShouldNavigateToChannelStats
+  } = useContext(AppContext);
 
   const navigate = useNavigate();
   const { setVideoData } = useVideoData();
@@ -124,7 +154,6 @@ const VideoViewsChart = () => {
     }, 2500);
     return () => clearTimeout(timer);
   }, []);
-
 
   const fetchChannelId = async (username) => {
     // return await getChannelIdByUsername(username);
@@ -418,6 +447,20 @@ const VideoViewsChart = () => {
     }
   }, [videoArtificialData, shouldNavigate, isNavigating]);
 
+  useEffect(() => {
+    if (!showSplash) {
+      console.log('Trying to Navigate');
+      navigate('/input');
+    }
+  }, [showSplash]);
+
+  useEffect(() => {
+    if (shouldNavigateToChannelStats) {
+      console.log('Trying to Navigate');
+      navigate('/dashboard');
+    }
+  }, [shouldNavigateToChannelStats]);
+
 
   if (showSplash) {
     return (
@@ -464,95 +507,32 @@ const VideoViewsChart = () => {
         YouTube Analyser
       </h1>
 
-      <Input
-        username={username}
-        setUsername={setUsername}
-        handleSubmit={handleSubmit}
-        initButton={initButton}
-        setInitButton={setInitButton}
-        resetStates={() => {
-          setChannelStats(null);
-          setVideoArtificialData(null);
-          setChartData(null);
-          setViewsChartButton(false);
-          setChartOptions(null);
-          setInputChanged(true);
-          setHypothesisButton(false);
-          setSelectedTimeframe(null);
-          setTimeFrameButtonSelector(null);
-          setConsistentButton(false);
-        }}
+      <Input handleSubmit={handleSubmit} />
+
+      <Dashboard
+        channelStats={channelStats}
+        setChannelStats={setChannelStats}
+        channelId={channelId}
+        setChannelId={setChannelId}
+        viewsChartButton={viewsChartButton}
+        setViewsChartButton={setViewsChartButton}
+        buttonClicked={buttonClicked}
+        setButtonClicked={setButtonClicked}
+        shouldNavigate={shouldNavigate}
+        setShouldNavigate={setShouldNavigate}
+        consistentButton={consistentButton}
+        setConsistentButton={setConsistentButton}
+        consistentButtonClicked={consistentButtonClicked}
+        setConsistentButtonClicked={setConsistentButtonClicked}
+        hypothesisButton={hypothesisButton}
+        setHypothesisButton={setHypothesisButton}
+        hypothesisButtonClicked={hypothesisButtonClicked}
+        setHypothesisButtonClicked={setHypothesisButtonClicked}
+        selectedTimeframe={selectedTimeframe}
+        setSelectedTimeframe={setSelectedTimeframe}
+        timeframeButtonSelector={timeframeButtonSelector}
+        setTimeFrameButtonSelector={setTimeFrameButtonSelector}
       />
-
-      {channelStats && (
-        <div style={{ background: '#ececec', padding: '1.5rem', border: '3px solid #cd201f', borderRadius: '15px', marginBottom: '1.5rem', animation: 'slideUp 0.8s ease-out' }}>
-          <h2 style={{ marginBottom: '0.5rem', color: '#c8201f' }}>{channelStats.title}</h2>
-          <p className="text"><strong>Channel Description:</strong> {channelStats.description}</p>
-          <p className="text"><strong>Published:</strong> {new Date(channelStats.publishedAt).toLocaleDateString()}</p>
-          <p className="text"><strong>Subscribers:</strong> {parseInt(channelStats.subscribers).toLocaleString()}</p>
-          <p className="text"><strong>Total Views:</strong> {parseInt(channelStats.totalViews).toLocaleString()}</p>
-          <p className="text"><strong>Total Videos:</strong> {channelStats.totalVideos}</p>
-          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-            <button
-              onClick={async () => {
-                setButtonClicked(true);
-                setViewsChartButton(!viewsChartButton);
-                await fetchVideoStats(channelId);
-                setTimeout(() => setButtonClicked(false), 600);
-              }}
-              className={`action-button ${buttonClicked ? 'clicked-effect' : ''}`}
-            >
-              Show Video Views Chart
-            </button>
-            <button
-              style={{
-                marginLeft: 'auto',
-              }}
-              className={`action-button ${buttonClicked ? 'clicked-effect' : ''}`}
-              onClick={async () => {
-                await fetchVideoStats(channelId);
-                setShouldNavigate(true);
-              }}
-            >
-              Show Recent Videos
-            </button>
-            <button
-              onClick={async () => {
-                await fetchVideoStats(channelId);
-                setConsistentButtonClicked(true);
-                setConsistentButton(!consistentButton);
-                setTimeout(() => setConsistentButtonClicked(false), 600);
-              }}
-              className={`action-button ${consistentButtonClicked ? 'clicked-effect' : ''}`}
-              style={{
-                marginLeft: 'auto',
-                cursor: (consistentButtonClicked && consistentButton) ? 'progress' : 'pointer',
-            }}
-            >
-              Consistency Checker
-            </button>
-            <button
-              onClick={async () => {
-                setHypothesisButtonClicked(true);
-                if (hypothesisButton) {
-                  setSelectedTimeframe(null);
-                  setTimeFrameButtonSelector(null);
-                }
-                setHypothesisButton(!hypothesisButton);
-
-                setTimeout(() => setHypothesisButtonClicked(false), 600);
-              }}
-              className={`action-button ${hypothesisButtonClicked ? 'clicked-effect' : ''}`}
-              style={{
-                marginLeft: 'auto',
-                cursor: (hypothesisButtonClicked && hypothesisButton) ? 'progress' : 'pointer',
-              }}
-            >
-              Growth Analysis
-            </button>
-          </div>
-        </div>
-      )}
 
       {(loadingChart && buttonClicked) && <p style={{ textAlign: 'center' }}>Loading chart...</p>}
 
