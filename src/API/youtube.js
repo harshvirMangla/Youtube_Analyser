@@ -6,7 +6,7 @@ export async function getChannelIdByUsername(username) {
   const url = `${base_url}/search?part=snippet&type=channel&q=${username}&key=${api_key}`;
   const res = await fetch(url);
   const data = await res.json();
-  return data.items[0].id.channelId;
+  return data.items[0]?.id.channelId;
 }
 
 export async function fetchChannelDetails(channelId) {

@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Line } from 'react-chartjs-2';
+import { useNavigate } from 'react-router-dom';
 import { getChannelIdByUsername, api_key } from '../API/youtube.js';
 import ConsistencyChecker from './ConsistencyStats';
 import HypothesisChecker from './HypothesisChecker.jsx';
 import GenerateHistogram from './Histogram.jsx';
 import ScatterPlot, { precisionFinder, makeTicks } from './ScatterPlot.jsx';
 import GetLists from './DisplaySection.jsx';
+import Input from './InputSection';
+import { useVideoData } from "../context/VideoDataContext.jsx";
 import {
   CategoryScale,
   Chart as ChartJS,
@@ -108,6 +111,12 @@ const VideoViewsChart = () => {
   const [timeframeButtonSelector, setTimeFrameButtonSelector] = useState(null);
   const [animateHypothesis, setAnimateHypothesis] = useState(false);
   const [videoArtificialData, setVideoArtificialData] = useState([]);
+  const [inputChanged, setInputChanged] = useState(false);
+  const [shouldNavigate, setShouldNavigate] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
+
+  const navigate = useNavigate();
+  const { setVideoData } = useVideoData();
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -115,7 +124,6 @@ const VideoViewsChart = () => {
     }, 2500);
     return () => clearTimeout(timer);
   }, []);
-
 
 
   const fetchChannelId = async (username) => {
@@ -151,14 +159,15 @@ const VideoViewsChart = () => {
 
       // let allStats = [];
       // console.log(`Stats Length: ${allStats.length}`);
-      if (!chartData) {
 
+      if (!chartData && inputChanged) {
+        // setInputChanged(false);
         // let videoIds = [];
         // let nextPageToken = null;
         // let fetchCount = 0;
         //
         // while (fetchCount < 10) {
-        //   console.log('I am running...');
+        //   // console.log('I am running...');
         //
         //   let url = `${BASE_URL}/search?key=${API_KEY}&channelId=${channelId}&part=snippet,id&type=video&maxResults=50`;
         //   if (nextPageToken) {
@@ -207,7 +216,9 @@ const VideoViewsChart = () => {
             date: video.dateObj.toLocaleDateString()
           }));
 
+        console.log('I have set it.')
         setVideoArtificialData(allStats);
+        console.log('I have set it.')
 
         const movingAverage = (arr, windowSize) => {
           const result = [];
@@ -388,6 +399,7 @@ const VideoViewsChart = () => {
 
   const handleSubmit = async () => {
     const id = await fetchChannelId(username);
+    // console.log(`Channel ID: ${id}`);
     if (id) {
       setChannelId(id);
       const stats = await fetchChannelStats(id);
@@ -396,6 +408,16 @@ const VideoViewsChart = () => {
       alert("Channel not found.");
     }
   };
+
+  useEffect(() => {
+    if (shouldNavigate && videoArtificialData?.length && !isNavigating) {
+      setIsNavigating(true);
+      setVideoData(videoArtificialData);
+      navigate('/top-videos');
+      setShouldNavigate(false);
+    }
+  }, [videoArtificialData, shouldNavigate, isNavigating]);
+
 
   if (showSplash) {
     return (
@@ -432,33 +454,35 @@ const VideoViewsChart = () => {
 
   return (
     <div style={{ maxWidth: '1630px', margin: '2rem auto', fontFamily: 'Segoe UI, sans-serif', animation: 'fadeIn 1s ease-in' }}>
-      <h1 style={{ textAlign: 'center', fontSize: '2rem', color: '#cd201f', marginBottom: '1.5rem' }}>
-        YouTube Channel Insights
+      <h1 style={{
+        fontSize: '1.5rem',
+        color: '#bababa',
+        margin: '1rem',
+        textAlign: 'left',
+        alignSelf: 'flex-start'
+      }}>
+        YouTube Analyser
       </h1>
 
-      <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', alignItems: 'center', marginBottom: '1.5rem' }}>
-        <input
-          type="text"
-          placeholder="Enter YouTube username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          style={{ padding: '0.7rem', borderRadius: '10px', border: '3px solid #cc0000', flex: 1 }}
-        />
-
-        <button
-          onClick={async () => {
-            setInitButton(true);
-            if(!channelStats) {
-              await handleSubmit();
-            }
-            setTimeout(() => setInitButton(false), 600);
-          }}
-          style={{ height: '45px' }}
-          className={`action-button ${initButton ? 'clicked-effect' : ''}`}
-        >
-          Get Stats
-        </button>
-      </div>
+      <Input
+        username={username}
+        setUsername={setUsername}
+        handleSubmit={handleSubmit}
+        initButton={initButton}
+        setInitButton={setInitButton}
+        resetStates={() => {
+          setChannelStats(null);
+          setVideoArtificialData(null);
+          setChartData(null);
+          setViewsChartButton(false);
+          setChartOptions(null);
+          setInputChanged(true);
+          setHypothesisButton(false);
+          setSelectedTimeframe(null);
+          setTimeFrameButtonSelector(null);
+          setConsistentButton(false);
+        }}
+      />
 
       {channelStats && (
         <div style={{ background: '#ececec', padding: '1.5rem', border: '3px solid #cd201f', borderRadius: '15px', marginBottom: '1.5rem', animation: 'slideUp 0.8s ease-out' }}>
@@ -479,6 +503,18 @@ const VideoViewsChart = () => {
               className={`action-button ${buttonClicked ? 'clicked-effect' : ''}`}
             >
               Show Video Views Chart
+            </button>
+            <button
+              style={{
+                marginLeft: 'auto',
+              }}
+              className={`action-button ${buttonClicked ? 'clicked-effect' : ''}`}
+              onClick={async () => {
+                await fetchVideoStats(channelId);
+                setShouldNavigate(true);
+              }}
+            >
+              Show Recent Videos
             </button>
             <button
               onClick={async () => {
@@ -520,7 +556,7 @@ const VideoViewsChart = () => {
 
       {(loadingChart && buttonClicked) && <p style={{ textAlign: 'center' }}>Loading chart...</p>}
 
-      {chartData && !loadingChart && (
+      {chartData && viewsChartButton && !loadingChart && (
         <div style={{
           background: '#fff',
           padding: '1.5rem',
@@ -569,9 +605,11 @@ const VideoViewsChart = () => {
         </div>
       )}
 
-      <div style={{ display: consistentButton ? 'block' : 'none' , marginTop: '1.5rem', marginBottom: '1.5rem'}} className="box">
-        <ConsistencyChecker videoData={videoArtificialData} />
-      </div>
+      {videoArtificialData && (
+        <div style={{ display: consistentButton ? 'block' : 'none' , marginTop: '1.5rem', marginBottom: '1.5rem'}} className="box">
+          <ConsistencyChecker videoData={videoArtificialData} />
+        </div>
+      )}
 
       <div style={{ display: hypothesisButton ? 'block' : 'none' }}>
         <div
@@ -658,7 +696,7 @@ const VideoViewsChart = () => {
         </div>
       </div>
 
-      {(hypothesisButton && selectedTimeframe) && (
+      {(hypothesisButton && videoArtificialData && selectedTimeframe) && (
         <div style={{ display: hypothesisButton ? 'block' : 'none' }}
         className={`hypothesis-wrapper ${animateHypothesis ? 'animate' : ''}`}>
           <HypothesisChecker
