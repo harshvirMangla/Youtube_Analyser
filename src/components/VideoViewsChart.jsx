@@ -468,10 +468,11 @@ const VideoViewsChart = () => {
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
-        height: '85vh',
-        backgroundColor: '#fff',
+        height: '90vh',
+        backgroundColor: '#0f0f0f',
         animation: 'fadeOut 1s ease 2s forwards'
-      }}>
+      }}
+      >
         <img
           src="/yt-logo.png"
           alt="YouTube Logo"
