@@ -1,9 +1,17 @@
+import { v4 as uuidv4 } from 'uuid';
 import React, { useContext, useEffect } from 'react';
 import { AppContext } from '../context/AppContext.jsx';
 import { useNavigate } from 'react-router-dom';
 import { makeTicks, precisionFinder } from './ScatterPlot.jsx';
+import './Dashboard.css';
+import { api_key, base_url } from '../API/youtube.js';
+import videoViewsChart from './VideoViewsChart.jsx';
+
+const sessionId = uuidv4();
 
 const Dashboard = () => {
+  const API_KEY = api_key;
+  const BASE_URL = base_url;
   const navigate = useNavigate();
 
   const {
@@ -35,6 +43,12 @@ const Dashboard = () => {
     setTimeFrameButtonSelector,
     shouldNavigateToVideoCharts,
     setShouldNavigateToVideoCharts,
+    shouldNavigateToListPage,
+    setShouldNavigateToListPage,
+    shouldNavigateToConsistent,
+    setShouldNavigateToConsistent,
+    shouldNavigateToHypothesis,
+    setShouldNavigateToHypothesis,
   } = useContext(AppContext);
 
   useEffect(() => {
@@ -43,6 +57,51 @@ const Dashboard = () => {
       navigate('/charts');
     }
   }, [shouldNavigateToVideoCharts]);
+
+  useEffect(() => {
+    if (shouldNavigateToListPage) {
+      setShouldNavigateToListPage(false);
+      navigate('/list');
+    }
+  }, [shouldNavigateToListPage]);
+
+  useEffect(() => {
+    if (shouldNavigateToConsistent) {
+      setShouldNavigateToConsistent(false);
+      navigate('/consistent');
+    }
+  }, [shouldNavigateToConsistent]);
+
+  useEffect(() => {
+    if (shouldNavigateToHypothesis) {
+      setShouldNavigateToHypothesis(false);
+      setSelectedTimeframe(null);
+      navigate('/hypothesis');
+    }
+  }, [shouldNavigateToHypothesis]);
+
+  const saveAnalysis = async () => {
+    const response = await fetch("http://localhost:3000/api/analysis", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(videoArtificialData)
+    });
+
+    const result = await response.json();
+    console.log("Saved:", result);
+  };
+
+  useEffect(() => {
+    if (Array.isArray(videoArtificialData) && videoArtificialData.length > 0) {
+      console.log('📤 Saving in Database');
+      saveAnalysis();
+    }
+    else {
+      console.log('⚠️ No data to save or data not ready');
+    }
+  }, [videoArtificialData]);
 
   function generateFakeYouTubeData(count = 100) {
     const fakeData = [];
@@ -60,6 +119,8 @@ const Dashboard = () => {
       date.setHours(randomHour, randomMinute, randomSecond);
 
       fakeData.push({
+        channelId: channelId,
+        sessionId: sessionId,
         snippet: {
           title: `Fake Video Title #${i + 1}`,
           publishedAt: date.toISOString(),
@@ -121,6 +182,12 @@ const Dashboard = () => {
         //   allStats.push(...statsData.items);
         // }
 
+        // allStats = allStats.map(video => ({
+        //   ...video,
+        //   sessionId: sessionId,
+        //   channelId: channelId,
+        // }));
+
         // console.log("I don't have chart Data");
         const allStats = generateFakeYouTubeData(100);
 
@@ -136,9 +203,10 @@ const Dashboard = () => {
             date: video.dateObj.toLocaleDateString()
           }));
 
-        console.log('I have set it.')
+        // console.log('I have set it.')
         setVideoArtificialData(allStats);
-        console.log('I have set it.')
+        // saveAnalysis();
+        // console.log('I have set it.')
 
         const movingAverage = (arr, windowSize) => {
           const result = [];
@@ -183,6 +251,7 @@ const Dashboard = () => {
 
         const precisionMoving = precisionFinder(ticksMoving);
         const precisionCumulative = precisionFinder(ticksCumulative);
+
         // console.log("The following are the ticks:");
         // console.log(ticksMoving, ticksCumulative);
         // console.log(precisionMoving, precisionCumulative);
@@ -194,7 +263,7 @@ const Dashboard = () => {
               label: 'Moving Average of Views',
               data: movingAvgViews,
               borderColor: '#cd1f20',
-              backgroundColor: 'rgba(205, 31, 32, 0.1)',
+              backgroundColor: 'rgba(64,0,0,0.47)',
               tension: 0.4,
               pointRadius: 1.2,
               borderWidth: 2,
@@ -204,8 +273,8 @@ const Dashboard = () => {
             {
               label: 'Cumulative Views',
               data: cumulativeViews,
-              borderColor: '#000',
-              backgroundColor: '#a5a5a5',
+              borderColor: '#a8a8a8',
+              backgroundColor: 'rgba(0, 0, 0, 0.3)',
               tension: 0.2,
               pointRadius: 1.2,
               borderWidth: 2,
@@ -220,7 +289,7 @@ const Dashboard = () => {
             legend: {
               display: true,
               labels: {
-                color: '#333',
+                color: '#bdbdbd',
                 font: {
                   size: 14,
                   family: 'Segoe UI',
@@ -231,7 +300,7 @@ const Dashboard = () => {
             title: {
               display: true,
               text: 'Channel Growth Over Time',
-              color: '#cd1f20',
+              color: '#b8b8b8',
               font: {
                 size: 25,
                 family: 'Segoe UI',
@@ -255,14 +324,14 @@ const Dashboard = () => {
               title: {
                 display: true,
                 text: 'Video Release Date',
-                color: '#333',
+                color: '#b6b6b6',
                 font: {
                   size: 15,
                   weight: 'bold',
                 },
               },
               ticks: {
-                color: '#333',
+                color: '#b6b6b6',
                 size: 10,
                 maxTicksLimit: 50,
                 autoSkip: true,
@@ -279,15 +348,17 @@ const Dashboard = () => {
               title: {
                 display: true,
                 text: 'Cumulative Views',
+                color: '#b6b6b6',
               },
               min: 0,
               max: Math.max(...ticksCumulative),
               ticks: {
+                color: '#b6b6b6',
                 stepSize: ticksCumulative[1] - ticksCumulative[0],
                 callback: (value) => `${(value / retCumulative.number).toFixed(precisionCumulative)}${retCumulative.ac}`,
               },
               grid: {
-                color: '#eee',
+                color: '#ffffff',
               },
             },
             y1: {
@@ -402,19 +473,19 @@ const Dashboard = () => {
           </h2>
         </div>
 
-        <div style={statCardStyle}>
+        <div className='statcard'>
           <p><strong>Description:</strong> {channelStats.description}</p>
         </div>
 
-        <div style={statCardStyle}>
+        <div className='statcard'>
           <p><strong>Published:</strong> {new Date(channelStats.publishedAt).toLocaleDateString()}</p>
         </div>
 
-        <div style={statCardStyle}>
+        <div className='statcard'>
           <p><strong>Subscribers:</strong> {parseInt(channelStats.subscribers).toLocaleString()}</p>
         </div>
 
-        <div style={statCardStyle}>
+        <div className='statcard'>
           <p><strong>Total Views:</strong> {parseInt(channelStats.totalViews).toLocaleString()}</p>
         </div>
 
@@ -427,7 +498,7 @@ const Dashboard = () => {
             display: 'flex',
             flexWrap: 'wrap',
             gap: '1rem',
-            marginTop: '2rem',
+            marginTop: '3rem',
             justifyContent: 'space-between',
           }}
         >
@@ -450,7 +521,9 @@ const Dashboard = () => {
           <button
             onClick={async () => {
               await fetchVideoStats(channelId);
-              setShouldNavigate(true);
+              setTimeout(() => {
+                setShouldNavigateToListPage(true)
+              }, 600);
             }}
             className="btn"
             style={buttonStyle}
@@ -461,14 +534,14 @@ const Dashboard = () => {
           <button
             onClick={async () => {
               await fetchVideoStats(channelId);
-              setConsistentButtonClicked(true);
-              setConsistentButton(!consistentButton);
-              setTimeout(() => setConsistentButtonClicked(false), 600);
+              // setConsistentButtonClicked(true);
+              // setConsistentButton(!consistentButton);
+              setTimeout(() => setShouldNavigateToConsistent(true), 600);
             }}
             className="btn"
             style={{
               ...buttonStyle,
-              cursor: consistentButtonClicked && consistentButton ? 'progress' : 'pointer',
+              // cursor: consistentButtonClicked && consistentButton ? 'progress' : 'pointer',
             }}
           >
             📊 Consistency Checker
@@ -476,18 +549,13 @@ const Dashboard = () => {
 
           <button
             onClick={async () => {
-              setHypothesisButtonClicked(true);
-              if (hypothesisButton) {
-                setSelectedTimeframe(null);
-                setTimeFrameButtonSelector(null);
-              }
-              setHypothesisButton(!hypothesisButton);
-              setTimeout(() => setHypothesisButtonClicked(false), 600);
+              await fetchVideoStats(channelId);
+              setTimeout(() => setShouldNavigateToHypothesis(true), 600);
             }}
             className="btn"
             style={{
               ...buttonStyle,
-              cursor: hypothesisButtonClicked && hypothesisButton ? 'progress' : 'pointer',
+              // cursor: hypothesisButtonClicked && hypothesisButton ? 'progress' : 'pointer',
             }}
           >
             📈 Growth Analysis

@@ -89,7 +89,7 @@ const GenerateHistogram = React.memo(({data, binNumber = 10}) => {
       {
         label: 'Number of Videos',
         data: bins,
-        backgroundColor: '#cd1f20',
+        backgroundColor: '#b3b3b3',
         borderRadius: 12,
         barPercentage: 0.8,
         categoryPercentage: 0.9,
@@ -103,7 +103,7 @@ const GenerateHistogram = React.memo(({data, binNumber = 10}) => {
       title: {
         display: true,
         text: 'Histogram of Video Views',
-        color: '#cd1f20',
+        color: '#a8a8a8',
         font: {
           size: 25,
           family: 'Segoe UI',
@@ -129,9 +129,9 @@ const GenerateHistogram = React.memo(({data, binNumber = 10}) => {
           display: true,
           text: 'View Ranges',
           font: { size: 15, weight: 'bold' },
-          color: '#333',
+          color: '#a8a8a8',
         },
-        ticks: { color: '#333', maxRotation: 50, minRotation: 0 },
+        ticks: { color: '#a8a8a8', maxRotation: 50, minRotation: 0 },
         grid: { display: false },
       },
       y: {
@@ -139,10 +139,10 @@ const GenerateHistogram = React.memo(({data, binNumber = 10}) => {
           display: true,
           text: 'Number of Videos',
           font: { size: 15, weight: 'bold' },
-          color: '#333',
+          color: '#a8a8a8',
         },
-        ticks: { color: '#333' },
-        grid: { color: '#eee' },
+        ticks: { color: '#a8a8a8' },
+        grid: { color: '#fff' },
       },
     },
   };

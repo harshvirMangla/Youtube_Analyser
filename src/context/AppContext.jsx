@@ -21,6 +21,8 @@ export const AppProvider = ({ children }) => {
   const [hypothesisButtonClicked, setHypothesisButtonClicked] = useState(null);
   const [firstTimeFrameSelected, setFirstTimeFrameSelected] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
+  const [consistencySummary, setConsistencySummary] = useState(null);
+  const [consistencyStats, setConsistencyStats] = useState(null);
   const [selectedTimeframe, setSelectedTimeframe] = useState(null);
   const [timeframeButtonSelector, setTimeFrameButtonSelector] = useState(null);
   const [animateHypothesis, setAnimateHypothesis] = useState(false);
@@ -30,6 +32,9 @@ export const AppProvider = ({ children }) => {
   const [isNavigating, setIsNavigating] = useState(false);
   const [shouldNavigateToChannelStats, setShouldNavigateToChannelStats] = useState(false);
   const [shouldNavigateToVideoCharts, setShouldNavigateToVideoCharts] = useState(false);
+  const [shouldNavigateToListPage, setShouldNavigateToListPage] = useState(false);
+  const [shouldNavigateToConsistent, setShouldNavigateToConsistent] = useState(false);
+  const [shouldNavigateToHypothesis, setShouldNavigateToHypothesis] = useState(false);
 
   const handleSubmit = async () => {
     const id = await fetchChannelId(username);
@@ -56,9 +61,10 @@ export const AppProvider = ({ children }) => {
     setChartOptions(null);
     setInputChanged(true);
     setHypothesisButton(false);
-    setSelectedTimeframe(null);
+    // setSelectedTimeframe(null);
     setTimeFrameButtonSelector(null);
     setConsistentButton(false);
+    setConsistencySummary(null);
   };
 
   return (
@@ -79,6 +85,8 @@ export const AppProvider = ({ children }) => {
         hypothesisButtonClicked, setHypothesisButtonClicked,
         firstTimeFrameSelected, setFirstTimeFrameSelected,
         showSplash, setShowSplash,
+        consistencySummary, setConsistencySummary,
+        consistencyStats, setConsistencyStats,
         selectedTimeframe, setSelectedTimeframe,
         timeframeButtonSelector, setTimeFrameButtonSelector,
         animateHypothesis, setAnimateHypothesis,
@@ -88,6 +96,9 @@ export const AppProvider = ({ children }) => {
         isNavigating, setIsNavigating,
         shouldNavigateToChannelStats, setShouldNavigateToChannelStats,
         shouldNavigateToVideoCharts, setShouldNavigateToVideoCharts,
+        shouldNavigateToListPage, setShouldNavigateToListPage,
+        shouldNavigateToConsistent, setShouldNavigateToConsistent,
+        shouldNavigateToHypothesis, setShouldNavigateToHypothesis,
         resetStates
       }}
     >

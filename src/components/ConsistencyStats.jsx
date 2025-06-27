@@ -1,6 +1,8 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useContext } from 'react';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { getChannelIdByUsername, api_key } from '../API/youtube.js';
+import { AppContext } from '../context/AppContext.jsx';
+import './Dashboard.css';
 
 const API_KEY = api_key;
 const BASE_URL = 'https://www.googleapis.com/youtube/v3';
@@ -42,14 +44,25 @@ async function generateSummary(data) {
   return response.text();
 }
 
-const ConsistencyChecker = ({ videoData }) => {
-  const [summary, setSummary] = useState('');
+const ConsistencyChecker = () => {
+  const {
+    videoArtificialData,
+    consistencySummary,
+    setConsistencySummary,
+    consistencyStats,
+    setConsistencyStats,
+  } = useContext(AppContext);
+
+  const videoData = videoArtificialData;
   const [loading, setLoading] = useState(true);
   const hasGenerated = useRef(false);
-  const [stats, setStats] = useState(null);
 
   useEffect(() => {
-    if (!hasGenerated.current && videoData.length > 1) {
+    if (consistencySummary) {
+      console.log('Leaving');
+      setLoading(false);
+    }
+    else if (!hasGenerated.current && videoData.length > 1) {
       hasGenerated.current = true;
       // console.log('Happening');
       const dates = videoData
@@ -79,42 +92,63 @@ const ConsistencyChecker = ({ videoData }) => {
       const _50p = percentile(gaps, 50);
       const _75p = percentile(gaps, 75);
 
-      setStats({ longestGap, shortestGap, averageGap, _25p, _50p, _75p });
+      setConsistencyStats({ longestGap, shortestGap, averageGap, _25p, _50p, _75p });
 
       const promptData = [longestGap, shortestGap, averageGap, _25p, _50p, _75p];
 
       generateSummary(promptData).then(text => {
-        setSummary(text);
+        setConsistencySummary(text);
         setLoading(false);
       });
     }
-  }, [hasGenerated, videoData]);
+  }, []);
 
   return (
-    <div style={{
-      background: '#ececec',
-      padding: '1rem',
-      border: '3px solid #cd201f',
-      borderRadius: '15px',
-      marginBottom: '1.5rem',
-      marginTop: '1.5rem',
-      animation: 'fadeIn 0.8s ease-out' }}>
-      <h3 style={{ marginBottom: '0.5rem', color: '#c8201f' }}>Consistency Stats</h3>
+    <div className='dashboard'>
+      <div style={{textAlign: 'center'}}>
+        <h2
+          style={{
+            color: '#ffffff',
+            fontSize: '2.5rem',
+            fontWeight: 'bold',
+            background: 'linear-gradient(to right, #4285f4, #9b59b6, #e74c3c)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            MozBackgroundClip: 'text',
+            MozTextFillColor: 'transparent',
+            display: 'inline-block',
+            marginBottom: '1rem',
+            textAlign: 'center',
+          }}
+        >
+          Consistency Stats
+        </h2>
+      </div>
 
-      {stats && (
-        <>
-          <p><strong>Longest Gap:</strong> {stats.longestGap.toFixed(2)} days</p>
-          <p><strong>Shortest Gap:</strong> {stats.shortestGap.toFixed(2)} days</p>
-          <p><strong>Average Gap:</strong> {stats.averageGap.toFixed(2)} days</p>
-          <p><strong>25th Percentile:</strong> {stats._25p.toFixed(2)} days</p>
-          <p><strong>50th Percentile (Median):</strong> {stats._50p.toFixed(2)} days</p>
-          <p><strong>75th Percentile:</strong> {stats._75p.toFixed(2)} days</p>
-        </>
-      )}
+      <div className='statcard'>
+        {consistencyStats && (
+          <>
+            <p><strong>Longest Gap:</strong> {consistencyStats.longestGap.toFixed(2)} days</p>
+            <p><strong>Shortest Gap:</strong> {consistencyStats.shortestGap.toFixed(2)} days</p>
+            <p><strong>Average Gap:</strong> {consistencyStats.averageGap.toFixed(2)} days</p>
+            <p><strong>25th Percentile:</strong> {consistencyStats._25p.toFixed(2)} days</p>
+            <p><strong>50th Percentile (Median):</strong> {consistencyStats._50p.toFixed(2)} days</p>
+            <p><strong>75th Percentile:</strong> {consistencyStats._75p.toFixed(2)} days</p>
+          </>
+        )}
+      </div>
 
-      <h3 style={{ marginTop: '2rem', color: '#c8201f' }}>
-        Consistency Summary</h3>
-      {loading ? <p>Generating summary...</p> : <p style={{ lineHeight: '1.6', fontSize: '18px' }}>{summary}</p>}
+      <div className='statcard'>
+        <div style={{textAlign: 'center'}}>
+          <h2
+            style={{ marginTop: '2rem', color: '#c8201f' }}
+          >
+            Consistency Summary
+          </h2>
+        </div>
+
+        {loading ? <p>Generating summary...</p> : <p style={{ lineHeight: '1.6', fontSize: '18px' }}>{consistencySummary}</p>}
+      </div>
     </div>
   );
 };

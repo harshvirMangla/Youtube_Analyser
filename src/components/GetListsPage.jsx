@@ -1,19 +1,39 @@
-import React from 'react';
+import React, { useContext } from 'react';
 // import { useLocation } from 'react-router-dom';
 import GetLists from './DisplaySection.jsx';
-import { useVideoData } from "../context/VideoDataContext.jsx";
+import { AppContext } from '../context/AppContext.jsx';
+import './Dashboard.css';
 
 const GetListsPage = () => {
-  // const location = useLocation();
-  // const videoData = location.state?.videoData || [];
-  const { videoData } = useVideoData();
+  const {
+    videoArtificialData,
+  } = useContext(AppContext);
+  const videoData  = videoArtificialData;
 
   return (
     <div>
-      <div style={{ maxWidth: '1630px', margin: '2rem auto', background: '#ececec', padding: '1rem', border: '3px dashed #cd201f', borderRadius: '15px', marginBottom: '1.5rem', animation: 'slideUp 0.8s ease-out' }}>
-        <h1 style={{ textAlign: 'center', color: '#c8201f', margin: '1rem 0' }}>
-          Top Videos
-        </h1>
+      <div
+        className='dashboard'
+      >
+        <div style={{textAlign: 'center'}}>
+          <h2
+            style={{
+              color: '#ffffff',
+              fontSize: '2.5rem',
+              fontWeight: 'bold',
+              background: 'linear-gradient(to right, #4285f4, #9b59b6, #e74c3c)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              MozBackgroundClip: 'text',
+              MozTextFillColor: 'transparent',
+              display: 'inline-block',
+              marginBottom: '1rem',
+              textAlign: 'center',
+            }}
+          >
+            Top Videos
+          </h2>
+        </div>
         <GetLists videoData={videoData} />
       </div>
     </div>

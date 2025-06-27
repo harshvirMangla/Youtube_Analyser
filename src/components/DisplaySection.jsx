@@ -1,4 +1,5 @@
 import React from 'react';
+import './Dashboard.css';
 
 const GetLists = React.memo(({ videoData }) => {
   if (!videoData || videoData.length === 0) return <p>No video data available.</p>;
@@ -12,13 +13,7 @@ const GetLists = React.memo(({ videoData }) => {
           .map((video, index) => (
             <li
               key={index}
-              style={{
-                background: '#f9f9f9',
-                marginBottom: '1rem',
-                padding: '1rem',
-                borderRadius: '8px',
-                borderLeft: '5px solid #cd1f20'
-              }}
+              className='statcard'
             >
               <h3 style={{ marginBottom: '0.5rem' }}>{video.snippet.title}</h3>
               <p><strong>Views:</strong> {Number(video.statistics.viewCount).toLocaleString()}</p>

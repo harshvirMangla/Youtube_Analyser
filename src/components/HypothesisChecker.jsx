@@ -1,5 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import { jStat } from 'jstat';
+import { AppContext } from '../context/AppContext.jsx';
+import './Dashboard.css';
 
 export function numberLabel (number) {
   if (number < 1000) return {divide: 1, ac: ''};
@@ -34,9 +36,19 @@ function WelchSatterthwaiteTtest (prevData, prevVar, prevAvg, newData, newVar, n
   return { result, stats: { tValue, df, tCritical } };
 }
 
-const HypothesisChecker = ({ viewsData, timeFrame }) => {
+const HypothesisChecker = () => {
+  const {
+    videoArtificialData,
+    selectedTimeframe
+  } = useContext(AppContext);
+
+  const viewsData = videoArtificialData;
+  const timeFrame = selectedTimeframe;
   const [testStats, setTestStats] = useState(null);
   const [tTestResult, setTTestResult] = useState(null);
+
+  console.log(videoArtificialData);
+  console.log(`timeFrame is ${timeFrame}.`);
 
   const data = viewsData
     .map(item => ({
@@ -73,6 +85,8 @@ const HypothesisChecker = ({ viewsData, timeFrame }) => {
     default:
       cutoffDate = new Date(0);
   }
+
+  console.log(cutoffDate);
 
   const prevData = data.filter(d => d.date < cutoffDate);
   const newData = data.filter(d => d.date >= cutoffDate);
@@ -127,31 +141,40 @@ const HypothesisChecker = ({ viewsData, timeFrame }) => {
   else if (!error && tTestResult === 0) result = "No significant difference in performance has been detected at the 95% confidence level.";
 
   return (
-    <div style={{ background: '#ececec', padding: '1rem', border: '3px solid #cd201f', borderRadius: '15px', marginBottom: '1.5rem', animation: 'slideUp 0.8s ease-out' }}>
-      <h3 style={{ marginBottom: '0.5rem', color: '#c8201f' }}>Hypothesis Tester</h3>
-      {viewsData.length < 1 ? <p><strong>The youtuber hasn't uploaded enough videos.</strong></p> : ''}
-      {error ? <p>{result}</p> : ''}
+      <>
+        <div className='statcard'>
+          {viewsData.length < 1 ? <p><strong>The youtuber hasn't uploaded enough videos.</strong></p> : ''}
+          {error ? <p>{result}</p> : ''}
 
-      {!error && (
-        <>
-          <p><strong>Average views before {cutoffDate.toDateString()}:</strong> {Number(prevAvg / numberLabel(prevAvg).divide).toFixed(2)}{numberLabel(prevAvg).ac}</p>
-          <p><strong>Average views after {cutoffDate.toDateString()}:</strong> {Number(newAvg / numberLabel(newAvg).divide).toFixed(2)}{numberLabel(newAvg).ac}</p>
-          <p><strong>Standard Deviation in views before {cutoffDate.toDateString()}:</strong> {Number(Math.sqrt(prevVar) / numberLabel(Math.sqrt(prevVar)).divide).toFixed(2)}{numberLabel(Math.sqrt(prevVar)).ac}</p>
-          <p><strong>Standard Deviation in views after {cutoffDate.toDateString()}:</strong> {Number(Math.sqrt(newVar) / numberLabel(Math.sqrt(newVar)).divide).toFixed(2)}{numberLabel(Math.sqrt(newVar)).ac}</p>
-        </>
-      )}
+          {!error && (
+            <>
+              <p><strong>Average views before {cutoffDate.toDateString()}:</strong> {Number(prevAvg / numberLabel(prevAvg).divide).toFixed(2)}{numberLabel(prevAvg).ac}</p>
+              <p><strong>Average views after {cutoffDate.toDateString()}:</strong> {Number(newAvg / numberLabel(newAvg).divide).toFixed(2)}{numberLabel(newAvg).ac}</p>
+              <p><strong>Standard Deviation in views before {cutoffDate.toDateString()}:</strong> {Number(Math.sqrt(prevVar) / numberLabel(Math.sqrt(prevVar)).divide).toFixed(2)}{numberLabel(Math.sqrt(prevVar)).ac}</p>
+              <p><strong>Standard Deviation in views after {cutoffDate.toDateString()}:</strong> {Number(Math.sqrt(newVar) / numberLabel(Math.sqrt(newVar)).divide).toFixed(2)}{numberLabel(Math.sqrt(newVar)).ac}</p>
+            </>
+          )}
+        </div>
 
-      {testStats && !error && (
-        <>
-          <h3 style={{ marginTop: '3rem', marginBottom: '0.5rem', color: '#c8201f' }}>Welch-Satterthwaite's t-Test</h3>
-          <p><strong>t Statistic value:</strong> {Number(testStats.tValue).toFixed(3)}</p>
-          <p><strong>Degrees of Freedom (df):</strong> {Number(testStats.df).toFixed(3)}</p>
-          <p><strong>Critical t value:</strong> {Number(testStats.tCritical).toFixed(3)}</p>
-          <p>{result}</p>
-        </>
-      )}
-
-    </div>
+        <div
+          style={{
+            display: (testStats && !error) ? 'block' : 'none',
+          }}
+          className='statcard'
+        >
+          {testStats && !error && (
+            <>
+              <div style={{textAlign: 'center'}}>
+                <h2 style={{ marginTop: '1rem', marginBottom: '1.5rem', color: '#c8201f' }}>Welch-Satterthwaite's t-Test</h2>
+              </div>
+              <p><strong>t Statistic value:</strong> {Number(testStats.tValue).toFixed(3)}</p>
+              <p><strong>Degrees of Freedom (df):</strong> {Number(testStats.df).toFixed(3)}</p>
+              <p><strong>Critical t value:</strong> {Number(testStats.tCritical).toFixed(3)}</p>
+              <p>{result}</p>
+            </>
+          )}
+        </div>
+      </>
       );
 };
 
