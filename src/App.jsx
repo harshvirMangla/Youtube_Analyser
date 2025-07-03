@@ -7,6 +7,7 @@ import VideoViewsChart from './components/VideoViewsChart';
 import GetListsPage from './components/GetListsPage';
 import ConsistencyChecker from './components/ConsistencyStats';
 import HypothesisDisplay from './components/HypothesisDisplay.jsx';
+import HistoryPage from './components/History';
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
       <Route path="/list" element={<GetListsPage />} />
       <Route path="/consistent" element={<ConsistencyChecker />} />
       <Route path="/hypothesis" element={<HypothesisDisplay />} />
+      <Route path="/history" element={<HistoryPage />} />
     </Routes>
   );
 }

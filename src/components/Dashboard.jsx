@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import React, { useContext, useEffect } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { AppContext } from '../context/AppContext.jsx';
 import { useNavigate } from 'react-router-dom';
 import { makeTicks, precisionFinder } from './ScatterPlot.jsx';
@@ -7,7 +7,19 @@ import './Dashboard.css';
 import { api_key, base_url } from '../API/youtube.js';
 import videoViewsChart from './VideoViewsChart.jsx';
 
-const sessionId = uuidv4();
+export const getSessionId = () => {
+  let sessionId = localStorage.getItem('yt_analyzer_user');
+
+  if (!sessionId) {
+    sessionId = uuidv4();
+    localStorage.setItem('yt_analyzer_user', sessionId);
+  }
+
+  return sessionId;
+};
+
+const sessionId = getSessionId();
+console.log(sessionId);
 
 const Dashboard = () => {
   const API_KEY = api_key;
@@ -16,31 +28,21 @@ const Dashboard = () => {
 
   const {
     channelStats,
+    setChannelStats,
     channelId,
+    username,
     chartData,
     videoArtificialData,
     setVideoArtificialData,
     viewsChartButton,
     setViewsChartButton,
-    buttonClicked,
     setChartData,
     inputChanged,
-    chartOptions,
-    setChartOptions,
     setInputChanged,
+    setChartOptions,
     setButtonClicked,
     setLoadingChart,
-    setShouldNavigate,
-    consistentButton,
-    setConsistentButton,
-    consistentButtonClicked,
-    setConsistentButtonClicked,
-    hypothesisButton,
-    setHypothesisButton,
-    hypothesisButtonClicked,
-    setHypothesisButtonClicked,
     setSelectedTimeframe,
-    setTimeFrameButtonSelector,
     shouldNavigateToVideoCharts,
     setShouldNavigateToVideoCharts,
     shouldNavigateToListPage,
@@ -49,7 +51,24 @@ const Dashboard = () => {
     setShouldNavigateToConsistent,
     shouldNavigateToHypothesis,
     setShouldNavigateToHypothesis,
+    hasSaved,
+    setHasSaved,
+    timeEntryInDB,
+    navigatingFromHistory
   } = useContext(AppContext);
+
+  useEffect(() => {
+    const fetchChannelStatsFromHistory = async () => {
+      const response = await fetch(`http://localhost:3000/api/channel/${sessionId}/${channelId}/${timeEntryInDB}`);
+      const data = await response.json();
+      setChannelStats(data);
+    };
+
+    if (navigatingFromHistory) {
+      console.log('Navigating from History, Trying to get the channel stats');
+      fetchChannelStatsFromHistory();
+    }
+  });
 
   useEffect(() => {
     if (shouldNavigateToVideoCharts) {
@@ -81,25 +100,39 @@ const Dashboard = () => {
   }, [shouldNavigateToHypothesis]);
 
   const saveAnalysis = async () => {
+    console.log(`timeEntryInDB: ${timeEntryInDB}`);
+    console.log('Calling saveAnalysis inside Dashboard');
+    const databaseVideoItems = videoArtificialData.map(
+      (video) => ({
+        ...video,
+        channelId: channelId,
+        sessionId: sessionId,
+        channelName: username,
+        time: timeEntryInDB,
+      })
+    );
+
     const response = await fetch("http://localhost:3000/api/analysis", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify(videoArtificialData)
+      body: JSON.stringify(databaseVideoItems)
     });
 
     const result = await response.json();
-    console.log("Saved:", result);
+    // console.log("Saved:", result);
   };
 
   useEffect(() => {
-    if (Array.isArray(videoArtificialData) && videoArtificialData.length > 0) {
-      console.log('📤 Saving in Database');
+    if (Array.isArray(videoArtificialData) && videoArtificialData.length > 0 && !hasSaved) {
+      // console.log('📤 Saving in Database');
+      setHasSaved(true);
       saveAnalysis();
     }
     else {
       console.log('⚠️ No data to save or data not ready');
+      setHasSaved(false);
     }
   }, [videoArtificialData]);
 
@@ -119,8 +152,6 @@ const Dashboard = () => {
       date.setHours(randomHour, randomMinute, randomSecond);
 
       fakeData.push({
-        channelId: channelId,
-        sessionId: sessionId,
         snippet: {
           title: `Fake Video Title #${i + 1}`,
           publishedAt: date.toISOString(),
@@ -142,54 +173,52 @@ const Dashboard = () => {
       // console.log(`Stats Length: ${allStats.length}`);
 
       if (!chartData && inputChanged) {
-        // setInputChanged(false);
-        // let videoIds = [];
-        // let nextPageToken = null;
-        // let fetchCount = 0;
-        //
-        // while (fetchCount < 10) {
-        //   // console.log('I am running...');
-        //
-        //   let url = `${BASE_URL}/search?key=${API_KEY}&channelId=${channelId}&part=snippet,id&type=video&maxResults=50`;
-        //   if (nextPageToken) {
-        //     url += `&pageToken=${nextPageToken}`;
-        //   }
-        //
-        //   const searchRes = await fetch(url);
-        //   const searchData = await searchRes.json();
-        //
-        //   nextPageToken = searchData.nextPageToken || null;
-        //   // console.log(searchData);
-        //   // console.log(`Next Page Token: ${nextPageToken}`);
-        //
-        //   const ids = searchData.items
-        //     .filter(item => item.id.kind === 'youtube#video')
-        //     .map(item => item.id.videoId);
-        //
-        //   videoIds.push(...ids);
-        //
-        //   if(!nextPageToken) {break;}
-        //   fetchCount++;
-        // }
-        //
-        // const allStats = [];
-        // for (let i = 0; i < videoIds.length; i += 50) {
-        //   const chunk = videoIds.slice(i, i + 50).join(',');
-        //   const statsRes = await fetch(
-        //     `${BASE_URL}/videos?part=snippet,statistics&id=${chunk}&key=${API_KEY}`
-        //   );
-        //   const statsData = await statsRes.json();
-        //   allStats.push(...statsData.items);
-        // }
+        let allStats = [];
+        if (!navigatingFromHistory) {
+          console.log('Not Navigating from History');
+          setInputChanged(false);
+          let videoIds = [];
+          let nextPageToken = null;
+          let fetchCount = 0;
 
-        // allStats = allStats.map(video => ({
-        //   ...video,
-        //   sessionId: sessionId,
-        //   channelId: channelId,
-        // }));
+          while (fetchCount < 10) {
+            // console.log('I am running...');
 
-        // console.log("I don't have chart Data");
-        const allStats = generateFakeYouTubeData(100);
+            let url = `${BASE_URL}/search?key=${API_KEY}&channelId=${channelId}&part=snippet,id&type=video&maxResults=50`;
+            if (nextPageToken) {
+              url += `&pageToken=${nextPageToken}`;
+            }
+
+            const searchRes = await fetch(url);
+            const searchData = await searchRes.json();
+
+            nextPageToken = searchData.nextPageToken || null;
+            // console.log(searchData);
+            // console.log(`Next Page Token: ${nextPageToken}`);
+
+            const ids = searchData.items
+              .filter(item => item.id.kind === 'youtube#video')
+              .map(item => item.id.videoId);
+
+            videoIds.push(...ids);
+
+            if(!nextPageToken) {break;}
+            fetchCount++;
+          }
+
+          for (let i = 0; i < videoIds.length; i += 50) {
+            const chunk = videoIds.slice(i, i + 50).join(',');
+            const statsRes = await fetch(
+              `${BASE_URL}/videos?part=snippet,statistics&id=${chunk}&key=${API_KEY}`
+            );
+            const statsData = await statsRes.json();
+            allStats.push(...statsData.items);
+          }
+
+          // console.log("I don't have chart Data");
+          // allStats = generateFakeYouTubeData(100);
+          setVideoArtificialData(allStats);
+        }
 
         let sortedData = allStats
           .map(video => ({
@@ -204,7 +233,6 @@ const Dashboard = () => {
           }));
 
         // console.log('I have set it.')
-        setVideoArtificialData(allStats);
         // saveAnalysis();
         // console.log('I have set it.')
 

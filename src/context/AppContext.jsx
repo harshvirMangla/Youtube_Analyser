@@ -35,6 +35,13 @@ export const AppProvider = ({ children }) => {
   const [shouldNavigateToListPage, setShouldNavigateToListPage] = useState(false);
   const [shouldNavigateToConsistent, setShouldNavigateToConsistent] = useState(false);
   const [shouldNavigateToHypothesis, setShouldNavigateToHypothesis] = useState(false);
+  const [shouldNavigateToHistory, setShouldNavigateToHistory] = useState(false);
+  const [prevChannelId, setPrevChannelId] = useState(null);
+  const [hasSaved, setHasSaved] = useState(false);
+  const [timeEntryInDB, setTimeEntryInDB] = useState(null);
+  const [navigatingFromHistory, setNavigatingFromHistory] = useState(false);
+  const [prevChannelStats, setPrevChannelStats] = useState(null);
+  const [prevTimeEntryInDB, setPrevTimeEntryInDB] = useState(null);
 
   const handleSubmit = async () => {
     const id = await fetchChannelId(username);
@@ -65,6 +72,8 @@ export const AppProvider = ({ children }) => {
     setTimeFrameButtonSelector(null);
     setConsistentButton(false);
     setConsistencySummary(null);
+    // setSavedData(false);
+    setHasSaved(false);
   };
 
   return (
@@ -99,6 +108,13 @@ export const AppProvider = ({ children }) => {
         shouldNavigateToListPage, setShouldNavigateToListPage,
         shouldNavigateToConsistent, setShouldNavigateToConsistent,
         shouldNavigateToHypothesis, setShouldNavigateToHypothesis,
+        shouldNavigateToHistory, setShouldNavigateToHistory,
+        prevChannelId, setPrevChannelId,
+        hasSaved, setHasSaved,
+        timeEntryInDB, setTimeEntryInDB,
+        navigatingFromHistory, setNavigatingFromHistory,
+        prevChannelStats, setPrevChannelStats,
+        prevTimeEntryInDB, setPrevTimeEntryInDB,
         resetStates
       }}
     >
