@@ -151,6 +151,7 @@ const Input = () => {
   useEffect(() => {
     if (shouldNavigateToChannelStats) {
       setShouldNavigateToChannelStats(false);
+      console.log('Going to Dashboard');
       navigate('/dashboard');
     }
   }, [shouldNavigateToChannelStats]);

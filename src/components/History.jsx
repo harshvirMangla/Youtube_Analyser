@@ -11,6 +11,7 @@ const History = () => {
   const navigate = useNavigate();
 
   const {
+    setChannelStats,
     navigatingFromHistory,
     setNavigatingFromHistory,
     setVideoArtificialData,
@@ -19,11 +20,18 @@ const History = () => {
   const [history, setHistory] = useState([]);
 
   const handleCardClick = async (item) => {
-    const response = await fetch(`http://localhost:3000/api/analysis/${item.sessionId}/${item.channelId}/${item.time}`);
+    // const response = await fetch(`http://localhost:3000/api/analysis/${item.sessionId}/${item.channelId}/${item.time}`);
+    const response = await fetch(`http://localhost:3000/api/analysis/${item.sessionId}/${item.channelId}/${encodeURIComponent(item.time)}`);
     const data = await response.json();
     setVideoArtificialData(data);
     console.log(item.sessionId, item.channelId, item.time);
-    console.log(`Video Artificial Data Response: ${data}`);
+    // console.log(`Video Artificial Data Response: ${data}`);
+    // console.log('Video Artificial Data Response:', data);
+
+    const channelResponse = await fetch(`http://localhost:3000/api/channel/${item.sessionId}/${item.channelId}/${encodeURIComponent(item.time)}`);
+    const channelData = await channelResponse.json();
+    setChannelStats(channelData);
+    console.log('Channel Data: ', channelData);
   }
 
   useEffect(() => {
@@ -39,10 +47,15 @@ const History = () => {
     }
   }, [sessionId]);
 
+  // useEffect(() => {
+  //   setNavigatingFromHistory(false);
+  //   setVideoArtificialData(null);
+  // })
+
   useEffect(() => {
     setNavigatingFromHistory(false);
     setVideoArtificialData(null);
-  })
+  }, []);
 
   useEffect(() => {
     if (navigatingFromHistory) {
@@ -57,8 +70,8 @@ const History = () => {
           <li
             className='statcard'
             key={item._id}
-            onClick={() => {
-              handleCardClick(item);
+            onClick={async () => {
+              await handleCardClick(item);
               setNavigatingFromHistory(true);
             }}
           >

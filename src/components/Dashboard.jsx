@@ -15,7 +15,7 @@ export const getSessionId = () => {
     localStorage.setItem('yt_analyzer_user', sessionId);
   }
 
-  return sessionId;
+  return 2215;
 };
 
 const sessionId = getSessionId();
@@ -57,18 +57,25 @@ const Dashboard = () => {
     navigatingFromHistory
   } = useContext(AppContext);
 
-  useEffect(() => {
-    const fetchChannelStatsFromHistory = async () => {
-      const response = await fetch(`http://localhost:3000/api/channel/${sessionId}/${channelId}/${timeEntryInDB}`);
-      const data = await response.json();
-      setChannelStats(data);
-    };
+  // useEffect(() => {
+  //   const fetchChannelStatsFromHistory = async () => {
+  //     const response = await fetch(`http://localhost:3000/api/channel/${sessionId}/${channelId}/${timeEntryInDB}`);
+  //     const data = await response.json();
+  //     setChannelStats(data);
+  //   };
+  //
+  //   if (navigatingFromHistory) {
+  //     console.log('Navigating from History, Trying to get the channel stats');
+  //     fetchChannelStatsFromHistory();
+  //   }
+  // }, [navigatingFromHistory]);
 
-    if (navigatingFromHistory) {
-      console.log('Navigating from History, Trying to get the channel stats');
-      fetchChannelStatsFromHistory();
-    }
-  });
+  useEffect(() => {
+    console.log('NavigatingFromHistory', navigatingFromHistory);
+    console.log('Entered Dashboard');
+    console.log(channelStats);
+    console.log(videoArtificialData);
+  }, []);
 
   useEffect(() => {
     if (shouldNavigateToVideoCharts) {
@@ -125,8 +132,8 @@ const Dashboard = () => {
   };
 
   useEffect(() => {
-    if (Array.isArray(videoArtificialData) && videoArtificialData.length > 0 && !hasSaved) {
-      // console.log('📤 Saving in Database');
+    if (Array.isArray(videoArtificialData) && videoArtificialData.length > 0 && !hasSaved && !navigatingFromHistory) {
+      console.log('📤 Saving in Database');
       setHasSaved(true);
       saveAnalysis();
     }
@@ -464,7 +471,8 @@ const Dashboard = () => {
     transform: 'translateZ(0)',
   };
 
-  if (channelStats){
+  // if (true){
+    console.log('Trying to display stats');
     return (
       <div
         style={{
@@ -497,7 +505,8 @@ const Dashboard = () => {
               textAlign: 'center',
             }}
           >
-            {channelStats.title}
+            {/*{channelStats.title}*/}
+            {channelStats && channelStats.title ? channelStats.title : 'Loading...'}
           </h2>
         </div>
 
@@ -591,7 +600,7 @@ const Dashboard = () => {
         </div>
       </div>
     )
-  }
+  // }
 };
 
 export default Dashboard;

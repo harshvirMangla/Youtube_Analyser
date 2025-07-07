@@ -438,28 +438,28 @@ const VideoViewsChart = () => {
     }
   };
 
-  useEffect(() => {
-    if (shouldNavigate && videoArtificialData?.length && !isNavigating) {
-      setIsNavigating(true);
-      setVideoData(videoArtificialData);
-      navigate('/top-videos');
-      setShouldNavigate(false);
-    }
-  }, [videoArtificialData, shouldNavigate, isNavigating]);
-
+  // useEffect(() => {
+  //   if (shouldNavigate && videoArtificialData?.length && !isNavigating) {
+  //     setIsNavigating(true);
+  //     setVideoData(videoArtificialData);
+  //     navigate('/top-videos');
+  //     setShouldNavigate(false);
+  //   }
+  // }, [videoArtificialData, shouldNavigate, isNavigating]);
+  //
   useEffect(() => {
     if (!showSplash) {
       console.log('Trying to Navigate');
       navigate('/input');
     }
   }, [showSplash]);
-
-  useEffect(() => {
-    if (shouldNavigateToChannelStats) {
-      console.log('Trying to Navigate');
-      navigate('/dashboard');
-    }
-  }, [shouldNavigateToChannelStats]);
+  //
+  // useEffect(() => {
+  //   if (shouldNavigateToChannelStats) {
+  //     console.log('Trying to Navigate');
+  //     navigate('/dashboard');
+  //   }
+  // }, [shouldNavigateToChannelStats]);
 
 
   if (showSplash) {
@@ -496,290 +496,290 @@ const VideoViewsChart = () => {
     );
   }
 
-  return (
-    <div style={{ maxWidth: '1630px', margin: '2rem auto', fontFamily: 'Segoe UI, sans-serif', animation: 'fadeIn 1s ease-in' }}>
-      <h1 style={{
-        fontSize: '1.5rem',
-        color: '#bababa',
-        margin: '1rem',
-        textAlign: 'left',
-        alignSelf: 'flex-start'
-      }}>
-        YouTube Analyser
-      </h1>
-
-      <Input handleSubmit={handleSubmit} />
-
-      <Dashboard
-        channelStats={channelStats}
-        setChannelStats={setChannelStats}
-        channelId={channelId}
-        setChannelId={setChannelId}
-        viewsChartButton={viewsChartButton}
-        setViewsChartButton={setViewsChartButton}
-        buttonClicked={buttonClicked}
-        setButtonClicked={setButtonClicked}
-        shouldNavigate={shouldNavigate}
-        setShouldNavigate={setShouldNavigate}
-        consistentButton={consistentButton}
-        setConsistentButton={setConsistentButton}
-        consistentButtonClicked={consistentButtonClicked}
-        setConsistentButtonClicked={setConsistentButtonClicked}
-        hypothesisButton={hypothesisButton}
-        setHypothesisButton={setHypothesisButton}
-        hypothesisButtonClicked={hypothesisButtonClicked}
-        setHypothesisButtonClicked={setHypothesisButtonClicked}
-        selectedTimeframe={selectedTimeframe}
-        setSelectedTimeframe={setSelectedTimeframe}
-        timeframeButtonSelector={timeframeButtonSelector}
-        setTimeFrameButtonSelector={setTimeFrameButtonSelector}
-      />
-
-      {(loadingChart && buttonClicked) && <p style={{ textAlign: 'center' }}>Loading chart...</p>}
-
-      {chartData && viewsChartButton && !loadingChart && (
-        <div style={{
-          background: '#fff',
-          padding: '1.5rem',
-          borderRadius: '12px',
-          border: '3px dashed #cd201f',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-          animation: 'fadeInChart 1s ease-in',
-          display: viewsChartButton ? 'block' : 'none',
-        }}
-        >
-          <Line data={chartData} options={chartOptions} />
-        </div>
-      )}
-
-      {(chartData && !loadingChart) && (
-        <div style={{
-          background: '#fff',
-          padding: '1.5rem',
-          borderRadius: '12px',
-          border: '3px dashed #cd201f',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-          animation: 'fadeInChart 1s ease-in',
-          marginTop: '1.5rem',
-          marginBottom: '1.5rem',
-          display: viewsChartButton ? 'block' : 'none',
-        }}
-        >
-          <GenerateHistogram data={videoArtificialData} binNumber={7}/>
-        </div>
-      )}
-
-      {(chartData && !loadingChart) && (
-        <div style={{
-          background: '#fff',
-          padding: '1.5rem',
-          borderRadius: '12px',
-          border: '3px dashed #cd201f',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-          animation: 'fadeInChart 1s ease-in',
-          marginTop: '1.5rem',
-          marginBottom: '1.5rem',
-          display: viewsChartButton ? 'block' : 'none',
-        }}
-        >
-          <ScatterPlot videosData={videoArtificialData} />
-        </div>
-      )}
-
-      {videoArtificialData && (
-        <div style={{ display: consistentButton ? 'block' : 'none' , marginTop: '1.5rem', marginBottom: '1.5rem'}} className="box">
-          <ConsistencyChecker videoData={videoArtificialData} />
-        </div>
-      )}
-
-      <div style={{ display: hypothesisButton ? 'block' : 'none' }}>
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            background: '#ececec',
-            alignItems: 'center',
-            border: '3px dashed #cd201f',
-            borderRadius: '12px',
-            padding: '1rem',
-            marginTop: '1.5rem',
-            marginBottom: '1.5rem',
-            boxShadow: '0 0 10px rgba(205, 32, 31, 0.1)'
-          }}
-        >
-          <div style={{ flex: 1 }}>
-            <h3 style={{ color: '#c8201f', margin: 0 }}>
-              Select Timeframe for Growth Analysis
-            </h3>
-          </div>
-
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <button
-              style={{ backgroundColor: (timeframeButtonSelector === '1month') ? '#fd8d8d' : '#c8201f' }}
-              className='action-button innerHypothesis-button'
-              onClick={async () => {
-                setAnimateHypothesis(false);
-                setTimeFrameButtonSelector('1month');
-                setTimeout(() => {
-                  setSelectedTimeframe("1month");
-                  setHypothesisButtonClicked(false);
-                  setAnimateHypothesis(true);
-                }, firstTimeFrameSelected ? 500 : 0);
-                setFirstTimeFrameSelected(true);
-              }}
-            >1 Month</button>
-
-            <button
-              style={{ backgroundColor: (timeframeButtonSelector === '3months') ? '#fd8d8d' : '#c8201f' }}
-              className='action-button innerHypothesis-button'
-              onClick={async () => {
-                setAnimateHypothesis(false);
-                setTimeFrameButtonSelector('3months');
-                setTimeout(() => {
-                  setSelectedTimeframe("3months");
-                  setHypothesisButtonClicked(false);
-                  setAnimateHypothesis(true);
-                }, firstTimeFrameSelected ? 500 : 0);
-                setFirstTimeFrameSelected(true);
-              }}
-            >3 Months</button>
-
-            <button
-              style={{ backgroundColor: (timeframeButtonSelector === '6months') ? '#fd8d8d' : '#c8201f' }}
-              className='action-button innerHypothesis-button'
-              onClick={async () => {
-                setAnimateHypothesis(false);
-                setTimeFrameButtonSelector('6months');
-                setTimeout(() => {
-                  setSelectedTimeframe("6months");
-                  setHypothesisButtonClicked(false);
-                  setAnimateHypothesis(true);
-                }, firstTimeFrameSelected ? 500 : 0);
-                setFirstTimeFrameSelected(true);
-              }}
-            >6 Months</button>
-
-            <button
-              style={{ backgroundColor: (timeframeButtonSelector === '1year') ? '#fd8d8d' : '#c8201f' }}
-              className='action-button innerHypothesis-button'
-              onClick={async () => {
-                setAnimateHypothesis(false);
-                setTimeFrameButtonSelector('1year');
-                setTimeout(() => {
-                  setSelectedTimeframe("1year");
-                  setHypothesisButtonClicked(false);
-                  setAnimateHypothesis(true);
-                }, firstTimeFrameSelected ? 500 : 0);
-                setFirstTimeFrameSelected(true);
-              }}
-            >1 Year</button>
-          </div>
-        </div>
-      </div>
-
-      {(hypothesisButton && videoArtificialData && selectedTimeframe) && (
-        <div style={{ display: hypothesisButton ? 'block' : 'none' }}
-        className={`hypothesis-wrapper ${animateHypothesis ? 'animate' : ''}`}>
-          <HypothesisChecker
-            viewsData={videoArtificialData}
-            timeFrame={selectedTimeframe}
-          />
-        </div>
-      )}
-
-      <style>{`
-      body {
-      background-color: #ffffff;
-      margin: 0;
-      padding: 0;
-      }
-
-      @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-10px); }
-      to { opacity: 1; transform: translateY(0); }
-      }
-
-      @keyframes slideUp {
-      from { opacity: 0; transform: translateY(30px); }
-      to { opacity: 1; transform: translateY(0); }
-      }
-
-      @keyframes fadeInChart {
-      from { opacity: 0; }
-      to { opacity: 1; }
-      }
-
-      .box {}
-
-      .text {
-      color: black;
-      }
-
-      .action-button {
-      margin-top: 1rem;
-      padding: 0.6rem 1.2rem;
-      background-color: #cd201f;
-      color: white;
-      border: none;
-      border-radius: 15px;
-      cursor: pointer;
-      font-weight: 800;
-      font-size: 1rem;
-      transition: all 0.3s ease;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-      }
-
-      .action-button:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 0 20px rgba(190, 0, 0, 0.3);
-      }
-
-      .innerHypothesis-button {
-      margin-top: 1rem;
-      margin-bottom: 1rem;
-      margin-left: auto;
-      margin-right: auto;
-      }
-
-      .innerHypothesis-button:hover {
-      transform: scale(1.03);
-      background-color: #fd8d8d;
-      }
-
-      .hypothesis-wrapper {
-      opacity: 0;
-      transform: translateY(20px);
-      transition: opacity 0.5s ease, transform 0.8s ease;
-      }
-
-      .hypothesis-wrapper.animate {
-      opacity: 1;
-      transform: translateY(0);
-      transition: opacity 0.5s ease, transform 0.8s ease;
-      }
-
-      .clicked-effect {
-      animation: pressEffect 0.3s ease-out;
-      }
-
-      @keyframes pressEffect {
-      0% {
-      transform: scale(1);
-      box-shadow: 0 0 25px rgba(190, 0, 0, 0.3);
-      }
-      50% {
-      transform: scale(1);
-      box-shadow: 0 0 30px rgba(190, 0, 0, 0.4);
-      }
-      100% {
-      transform: scale(1);
-      box-shadow: 0 0 25px rgba(190, 0, 0, 0.3);
-      }
-      }
-
-      `}</style>
-    </div>
-  );
+  // return (
+  //   <div style={{ maxWidth: '1630px', margin: '2rem auto', fontFamily: 'Segoe UI, sans-serif', animation: 'fadeIn 1s ease-in' }}>
+  //     <h1 style={{
+  //       fontSize: '1.5rem',
+  //       color: '#bababa',
+  //       margin: '1rem',
+  //       textAlign: 'left',
+  //       alignSelf: 'flex-start'
+  //     }}>
+  //       YouTube Analyser
+  //     </h1>
+  //
+  //     <Input handleSubmit={handleSubmit} />
+  //
+  //     <Dashboard
+  //       channelStats={channelStats}
+  //       setChannelStats={setChannelStats}
+  //       channelId={channelId}
+  //       setChannelId={setChannelId}
+  //       viewsChartButton={viewsChartButton}
+  //       setViewsChartButton={setViewsChartButton}
+  //       buttonClicked={buttonClicked}
+  //       setButtonClicked={setButtonClicked}
+  //       shouldNavigate={shouldNavigate}
+  //       setShouldNavigate={setShouldNavigate}
+  //       consistentButton={consistentButton}
+  //       setConsistentButton={setConsistentButton}
+  //       consistentButtonClicked={consistentButtonClicked}
+  //       setConsistentButtonClicked={setConsistentButtonClicked}
+  //       hypothesisButton={hypothesisButton}
+  //       setHypothesisButton={setHypothesisButton}
+  //       hypothesisButtonClicked={hypothesisButtonClicked}
+  //       setHypothesisButtonClicked={setHypothesisButtonClicked}
+  //       selectedTimeframe={selectedTimeframe}
+  //       setSelectedTimeframe={setSelectedTimeframe}
+  //       timeframeButtonSelector={timeframeButtonSelector}
+  //       setTimeFrameButtonSelector={setTimeFrameButtonSelector}
+  //     />
+  //
+  //     {(loadingChart && buttonClicked) && <p style={{ textAlign: 'center' }}>Loading chart...</p>}
+  //
+  //     {chartData && viewsChartButton && !loadingChart && (
+  //       <div style={{
+  //         background: '#fff',
+  //         padding: '1.5rem',
+  //         borderRadius: '12px',
+  //         border: '3px dashed #cd201f',
+  //         boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+  //         animation: 'fadeInChart 1s ease-in',
+  //         display: viewsChartButton ? 'block' : 'none',
+  //       }}
+  //       >
+  //         <Line data={chartData} options={chartOptions} />
+  //       </div>
+  //     )}
+  //
+  //     {(chartData && !loadingChart) && (
+  //       <div style={{
+  //         background: '#fff',
+  //         padding: '1.5rem',
+  //         borderRadius: '12px',
+  //         border: '3px dashed #cd201f',
+  //         boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+  //         animation: 'fadeInChart 1s ease-in',
+  //         marginTop: '1.5rem',
+  //         marginBottom: '1.5rem',
+  //         display: viewsChartButton ? 'block' : 'none',
+  //       }}
+  //       >
+  //         <GenerateHistogram data={videoArtificialData} binNumber={7}/>
+  //       </div>
+  //     )}
+  //
+  //     {(chartData && !loadingChart) && (
+  //       <div style={{
+  //         background: '#fff',
+  //         padding: '1.5rem',
+  //         borderRadius: '12px',
+  //         border: '3px dashed #cd201f',
+  //         boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+  //         animation: 'fadeInChart 1s ease-in',
+  //         marginTop: '1.5rem',
+  //         marginBottom: '1.5rem',
+  //         display: viewsChartButton ? 'block' : 'none',
+  //       }}
+  //       >
+  //         <ScatterPlot videosData={videoArtificialData} />
+  //       </div>
+  //     )}
+  //
+  //     {videoArtificialData && (
+  //       <div style={{ display: consistentButton ? 'block' : 'none' , marginTop: '1.5rem', marginBottom: '1.5rem'}} className="box">
+  //         <ConsistencyChecker videoData={videoArtificialData} />
+  //       </div>
+  //     )}
+  //
+  //     <div style={{ display: hypothesisButton ? 'block' : 'none' }}>
+  //       <div
+  //         style={{
+  //           display: 'flex',
+  //           justifyContent: 'space-between',
+  //           background: '#ececec',
+  //           alignItems: 'center',
+  //           border: '3px dashed #cd201f',
+  //           borderRadius: '12px',
+  //           padding: '1rem',
+  //           marginTop: '1.5rem',
+  //           marginBottom: '1.5rem',
+  //           boxShadow: '0 0 10px rgba(205, 32, 31, 0.1)'
+  //         }}
+  //       >
+  //         <div style={{ flex: 1 }}>
+  //           <h3 style={{ color: '#c8201f', margin: 0 }}>
+  //             Select Timeframe for Growth Analysis
+  //           </h3>
+  //         </div>
+  //
+  //         <div style={{ display: 'flex', gap: '0.5rem' }}>
+  //           <button
+  //             style={{ backgroundColor: (timeframeButtonSelector === '1month') ? '#fd8d8d' : '#c8201f' }}
+  //             className='action-button innerHypothesis-button'
+  //             onClick={async () => {
+  //               setAnimateHypothesis(false);
+  //               setTimeFrameButtonSelector('1month');
+  //               setTimeout(() => {
+  //                 setSelectedTimeframe("1month");
+  //                 setHypothesisButtonClicked(false);
+  //                 setAnimateHypothesis(true);
+  //               }, firstTimeFrameSelected ? 500 : 0);
+  //               setFirstTimeFrameSelected(true);
+  //             }}
+  //           >1 Month</button>
+  //
+  //           <button
+  //             style={{ backgroundColor: (timeframeButtonSelector === '3months') ? '#fd8d8d' : '#c8201f' }}
+  //             className='action-button innerHypothesis-button'
+  //             onClick={async () => {
+  //               setAnimateHypothesis(false);
+  //               setTimeFrameButtonSelector('3months');
+  //               setTimeout(() => {
+  //                 setSelectedTimeframe("3months");
+  //                 setHypothesisButtonClicked(false);
+  //                 setAnimateHypothesis(true);
+  //               }, firstTimeFrameSelected ? 500 : 0);
+  //               setFirstTimeFrameSelected(true);
+  //             }}
+  //           >3 Months</button>
+  //
+  //           <button
+  //             style={{ backgroundColor: (timeframeButtonSelector === '6months') ? '#fd8d8d' : '#c8201f' }}
+  //             className='action-button innerHypothesis-button'
+  //             onClick={async () => {
+  //               setAnimateHypothesis(false);
+  //               setTimeFrameButtonSelector('6months');
+  //               setTimeout(() => {
+  //                 setSelectedTimeframe("6months");
+  //                 setHypothesisButtonClicked(false);
+  //                 setAnimateHypothesis(true);
+  //               }, firstTimeFrameSelected ? 500 : 0);
+  //               setFirstTimeFrameSelected(true);
+  //             }}
+  //           >6 Months</button>
+  //
+  //           <button
+  //             style={{ backgroundColor: (timeframeButtonSelector === '1year') ? '#fd8d8d' : '#c8201f' }}
+  //             className='action-button innerHypothesis-button'
+  //             onClick={async () => {
+  //               setAnimateHypothesis(false);
+  //               setTimeFrameButtonSelector('1year');
+  //               setTimeout(() => {
+  //                 setSelectedTimeframe("1year");
+  //                 setHypothesisButtonClicked(false);
+  //                 setAnimateHypothesis(true);
+  //               }, firstTimeFrameSelected ? 500 : 0);
+  //               setFirstTimeFrameSelected(true);
+  //             }}
+  //           >1 Year</button>
+  //         </div>
+  //       </div>
+  //     </div>
+  //
+  //     {(hypothesisButton && videoArtificialData && selectedTimeframe) && (
+  //       <div style={{ display: hypothesisButton ? 'block' : 'none' }}
+  //       className={`hypothesis-wrapper ${animateHypothesis ? 'animate' : ''}`}>
+  //         <HypothesisChecker
+  //           viewsData={videoArtificialData}
+  //           timeFrame={selectedTimeframe}
+  //         />
+  //       </div>
+  //     )}
+  //
+  //     <style>{`
+  //     body {
+  //     background-color: #ffffff;
+  //     margin: 0;
+  //     padding: 0;
+  //     }
+  //
+  //     @keyframes fadeIn {
+  //     from { opacity: 0; transform: translateY(-10px); }
+  //     to { opacity: 1; transform: translateY(0); }
+  //     }
+  //
+  //     @keyframes slideUp {
+  //     from { opacity: 0; transform: translateY(30px); }
+  //     to { opacity: 1; transform: translateY(0); }
+  //     }
+  //
+  //     @keyframes fadeInChart {
+  //     from { opacity: 0; }
+  //     to { opacity: 1; }
+  //     }
+  //
+  //     .box {}
+  //
+  //     .text {
+  //     color: black;
+  //     }
+  //
+  //     .action-button {
+  //     margin-top: 1rem;
+  //     padding: 0.6rem 1.2rem;
+  //     background-color: #cd201f;
+  //     color: white;
+  //     border: none;
+  //     border-radius: 15px;
+  //     cursor: pointer;
+  //     font-weight: 800;
+  //     font-size: 1rem;
+  //     transition: all 0.3s ease;
+  //     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  //     }
+  //
+  //     .action-button:hover {
+  //     transform: translateY(-1px);
+  //     box-shadow: 0 0 20px rgba(190, 0, 0, 0.3);
+  //     }
+  //
+  //     .innerHypothesis-button {
+  //     margin-top: 1rem;
+  //     margin-bottom: 1rem;
+  //     margin-left: auto;
+  //     margin-right: auto;
+  //     }
+  //
+  //     .innerHypothesis-button:hover {
+  //     transform: scale(1.03);
+  //     background-color: #fd8d8d;
+  //     }
+  //
+  //     .hypothesis-wrapper {
+  //     opacity: 0;
+  //     transform: translateY(20px);
+  //     transition: opacity 0.5s ease, transform 0.8s ease;
+  //     }
+  //
+  //     .hypothesis-wrapper.animate {
+  //     opacity: 1;
+  //     transform: translateY(0);
+  //     transition: opacity 0.5s ease, transform 0.8s ease;
+  //     }
+  //
+  //     .clicked-effect {
+  //     animation: pressEffect 0.3s ease-out;
+  //     }
+  //
+  //     @keyframes pressEffect {
+  //     0% {
+  //     transform: scale(1);
+  //     box-shadow: 0 0 25px rgba(190, 0, 0, 0.3);
+  //     }
+  //     50% {
+  //     transform: scale(1);
+  //     box-shadow: 0 0 30px rgba(190, 0, 0, 0.4);
+  //     }
+  //     100% {
+  //     transform: scale(1);
+  //     box-shadow: 0 0 25px rgba(190, 0, 0, 0.3);
+  //     }
+  //     }
+  //
+  //     `}</style>
+  //   </div>
+  // );
 };
 
 export default VideoViewsChart;
