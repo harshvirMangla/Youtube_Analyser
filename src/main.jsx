@@ -19,38 +19,57 @@
 //
 // getChannelVideoDetails(channelId);
 
+// import React from 'react';
+// import ReactDOM from 'react-dom/client';
+// import App from './App.jsx';
+//
+// ReactDOM.createRoot(document.getElementById('root')).render(
+//   <React.StrictMode>
+//     <App />
+//   </React.StrictMode>
+// );
+//
+// import { getChannelIdByUsername, getChannelVideoDetails } from './API/youtube.js';
+//
+// function VideoViewsChart() {
+//   const [videoData, setVideoData] = useState([]);
+//
+//   useEffect(() => {
+//     async function fetchData() {
+//       const channelId = await getChannelIdByUsername('srkledits');
+//       const data = await getChannelVideoDetails(channelId);
+//       setVideoData(data);
+//     }
+//
+//     fetchData();
+//   }, []);
+//
+//   return (
+//     <div>
+//       <h2>Video Views (Sample)</h2>
+//       <pre>{JSON.stringify(videoData, null, 2)}</pre>
+//     </div>
+//   );
+// }
+//
+// export default VideoViewsChart;
+
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.jsx';
+import { BrowserRouter } from 'react-router-dom';
+import { VideoDataProvider } from './context/VideoDataContext.jsx';
+import { AppProvider } from './context/AppContext.jsx';
+import './index.css';
 
-ReactDOM.createRoot(document.getElementById('root')).render(
+ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <App />
+    <BrowserRouter>
+      <AppProvider>
+        <VideoDataProvider>
+          <App />
+        </VideoDataProvider>
+      </AppProvider>
+    </BrowserRouter>
   </React.StrictMode>
 );
-
-import React, { useEffect, useState } from 'react';
-import { getChannelIdByUsername, getChannelVideoDetails } from '../API/youtube.js';
-
-function VideoViewsChart() {
-  const [videoData, setVideoData] = useState([]);
-
-  useEffect(() => {
-    async function fetchData() {
-      const channelId = await getChannelIdByUsername('srkledits');
-      const data = await getChannelVideoDetails(channelId);
-      setVideoData(data);
-    }
-
-    fetchData();
-  }, []);
-
-  return (
-    <div>
-      <h2>Video Views (Sample)</h2>
-      <pre>{JSON.stringify(videoData, null, 2)}</pre>
-    </div>
-  );
-}
-
-export default VideoViewsChart;
