@@ -1,8 +1,20 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import './Dashboard.css';
+import { AppContext } from '../context/AppContext.jsx';
 
 const GetLists = React.memo(({ videoData }) => {
-  if (!videoData || videoData.length === 0) return <p>No video data available.</p>;
+  const { persistentNavigatingFromHistory } = useContext(AppContext);
+
+  // if (!videoData || videoData.length === 0) return <p>No video data available.</p>;
+  if (!videoData || videoData.length === 0) {
+    return (
+      <p style={{ color: '#bbb', textAlign: 'center', margin: '2rem 0' }}>
+        {persistentNavigatingFromHistory
+          ? 'Video data was not fetched in the previous analysis.'
+          : 'No video data available or there was an error fetching it.'}
+      </p>
+    );
+  }
 
   return (
     <div style={{ padding: '1rem' }}>

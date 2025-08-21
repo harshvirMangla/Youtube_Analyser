@@ -42,6 +42,8 @@ export const AppProvider = ({ children }) => {
   const [navigatingFromHistory, setNavigatingFromHistory] = useState(false);
   const [prevChannelStats, setPrevChannelStats] = useState(null);
   const [prevTimeEntryInDB, setPrevTimeEntryInDB] = useState(null);
+  const [consistencyTime, setConsistencyTime] = useState(null);
+  const [persistentNavigatingFromHistory, setPersistentNavigatingFromHistory] = useState(false);
 
   const handleSubmit = async () => {
     const id = await fetchChannelId(username);
@@ -115,6 +117,8 @@ export const AppProvider = ({ children }) => {
         navigatingFromHistory, setNavigatingFromHistory,
         prevChannelStats, setPrevChannelStats,
         prevTimeEntryInDB, setPrevTimeEntryInDB,
+        consistencyTime, setConsistencyTime,
+        persistentNavigatingFromHistory, setPersistentNavigatingFromHistory,
         resetStates
       }}
     >

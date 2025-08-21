@@ -3,7 +3,9 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { getChannelIdByUsername, api_key } from '../API/youtube.js';
 import { AppContext } from '../context/AppContext.jsx';
 import './Dashboard.css';
+import { getSessionId } from './Dashboard.jsx';
 
+const sessionId = getSessionId();
 const API_KEY = api_key;
 const BASE_URL = 'https://www.googleapis.com/youtube/v3';
 const key = 'AIzaSyBmKerncsz6PJOozcUbd9TlP50WTYrq01c';
@@ -46,19 +48,52 @@ async function generateSummary(data) {
 
 const ConsistencyChecker = () => {
   const {
+    channelId,
     videoArtificialData,
     consistencySummary,
     setConsistencySummary,
     consistencyStats,
     setConsistencyStats,
+    timeEntryInDB,
+    persistentNavigatingFromHistory,
   } = useContext(AppContext);
 
   const videoData = videoArtificialData;
   const [loading, setLoading] = useState(true);
   const hasGenerated = useRef(false);
 
+  const saveToDB = async (statsData, summary) => {
+    try {
+      console.log('Saving summary to DB');
+      const data = {
+        sessionId,
+        channelId,
+        time: timeEntryInDB,
+        longestGap: statsData.longestGap,
+        shortestGap: statsData.shortestGap,
+        averageGap: statsData.averageGap,
+        percentile25: statsData._25p,
+        percentile50: statsData._50p,
+        percentile75: statsData._75p,
+        summary: summary
+      };
+
+      const response = await fetch('http://localhost:3000/api/consistency', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+
+      if (response.ok) {
+        console.log('Consistency stats saved to database');
+      }
+    } catch (error) {
+      console.error('Failed to save consistency stats:', error);
+    }
+  };
+
   useEffect(() => {
-    if (consistencySummary) {
+    if (consistencySummary && consistencyStats) {
       console.log('Leaving');
       setLoading(false);
     }
@@ -92,20 +127,23 @@ const ConsistencyChecker = () => {
       const _50p = percentile(gaps, 50);
       const _75p = percentile(gaps, 75);
 
-      setConsistencyStats({ longestGap, shortestGap, averageGap, _25p, _50p, _75p });
+      const statsData = { longestGap, shortestGap, averageGap, _25p, _50p, _75p };
+      setConsistencyStats(statsData);
 
       const promptData = [longestGap, shortestGap, averageGap, _25p, _50p, _75p];
 
       generateSummary(promptData).then(text => {
         setConsistencySummary(text);
         setLoading(false);
+
+        saveToDB(statsData, text);
       });
     }
-  }, []);
+  }, [consistencySummary, consistencyStats]);
 
   return (
     <div className='dashboard'>
-      <div style={{textAlign: 'center'}}>
+      <div style={{ textAlign: 'center' }}>
         <h2
           style={{
             color: '#ffffff',
@@ -125,32 +163,48 @@ const ConsistencyChecker = () => {
         </h2>
       </div>
 
-      <div className='statcard'>
-        {consistencyStats && (
-          <>
-            <p><strong>Longest Gap:</strong> {consistencyStats.longestGap.toFixed(2)} days</p>
-            <p><strong>Shortest Gap:</strong> {consistencyStats.shortestGap.toFixed(2)} days</p>
-            <p><strong>Average Gap:</strong> {consistencyStats.averageGap.toFixed(2)} days</p>
-            <p><strong>25th Percentile:</strong> {consistencyStats._25p.toFixed(2)} days</p>
-            <p><strong>50th Percentile (Median):</strong> {consistencyStats._50p.toFixed(2)} days</p>
-            <p><strong>75th Percentile:</strong> {consistencyStats._75p.toFixed(2)} days</p>
-          </>
-        )}
-      </div>
-
-      <div className='statcard'>
-        <div style={{textAlign: 'center'}}>
-          <h2
-            style={{ marginTop: '2rem', color: '#c8201f' }}
-          >
-            Consistency Summary
-          </h2>
+      {(!videoArtificialData || videoArtificialData.length <= 1) ? (
+        <div className='statcard' style={{ textAlign: 'center', padding: '2rem' }}>
+          <p style={{ color: '#bbb', fontSize: '18px', lineHeight: '1.6' }}>
+            {persistentNavigatingFromHistory
+              ? 'Video data was not fetched in the previous analysis.'
+              : 'No video data available or there was an error fetching it.'}
+          </p>
         </div>
+      ) : (
+        <>
+          <div className='statcard'>
+            {consistencyStats && (
+              <>
+                <p><strong>Longest Gap:</strong> {consistencyStats.longestGap.toFixed(2)} days</p>
+                <p><strong>Shortest Gap:</strong> {consistencyStats.shortestGap.toFixed(2)} days</p>
+                <p><strong>Average Gap:</strong> {consistencyStats.averageGap.toFixed(2)} days</p>
+                <p><strong>25th Percentile:</strong> {consistencyStats._25p.toFixed(2)} days</p>
+                <p><strong>50th Percentile (Median):</strong> {consistencyStats._50p.toFixed(2)} days</p>
+                <p><strong>75th Percentile:</strong> {consistencyStats._75p.toFixed(2)} days</p>
+              </>
+            )}
+          </div>
 
-        {loading ? <p>Generating summary...</p> : <p style={{ lineHeight: '1.6', fontSize: '18px' }}>{consistencySummary}</p>}
-      </div>
+          <div className='statcard'>
+            <div style={{ textAlign: 'center' }}>
+              <h2
+                style={{ marginTop: '2rem', color: '#c8201f' }}
+              >
+                Consistency Summary
+              </h2>
+            </div>
+
+            {loading ? (
+              <p>Generating summary...</p>
+            ) : (
+              <p style={{ lineHeight: '1.6', fontSize: '18px' }}>{consistencySummary}</p>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
-};
+}
 
 export default ConsistencyChecker;

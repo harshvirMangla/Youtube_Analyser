@@ -13,7 +13,8 @@ const VideoCharts = () => {
     chartData,
     chartOptions,
     buttonClicked,
-    videoArtificialData
+    videoArtificialData,
+    persistentNavigatingFromHistory,
   } = useContext(AppContext);
 
   const [chartType, setChartType] = useState(null);
@@ -40,9 +41,23 @@ const VideoCharts = () => {
     display: anyButtonClicked ? 'block' : 'none',
   };
 
+  const chartWrapperStyle = {
+    background: '#393939',
+    padding: '1.5rem',
+    borderRadius: '12px',
+    border: 'none',
+    boxShadow:
+      'inset 0 0 0.5px rgba(255,255,255,0.1), 0 8px 24px rgba(0,0,0,0.3)',
+    margin: '3rem auto',
+    animation: 'fadeInChart 1s ease-in',
+    width: '100%',
+    maxWidth: '83%',
+  };
+
   return (
     <div>
       {(loadingChart && buttonClicked) && <p style={{ textAlign: 'center' }}>Loading chart...</p>}
+
 
       <div style={statCardStyle}>
         <div
@@ -78,60 +93,105 @@ const VideoCharts = () => {
           </button>
         </div>
 
+        {/*<div style={chartCardStyle}>*/}
+        {/*  {chartData && !loadingChart && ( chartType === 'Line' ) && (*/}
+        {/*    <div style={{*/}
+        {/*      background: '#393939',*/}
+        {/*      padding: '1.5rem',*/}
+        {/*      borderRadius: '12px',*/}
+        {/*      border: 'none',*/}
+        {/*      boxShadow: 'inset 0 0 0.5px rgba(255,255,255,0.1), 0 8px 24px rgba(0,0,0,0.3)',*/}
+        {/*      alignItems: 'center',*/}
+        {/*      margin: '3rem auto',*/}
+        {/*      animation: 'fadeInChart 1s ease-in',*/}
+        {/*      width: '100%',*/}
+        {/*      maxWidth: '83%',*/}
+        {/*    }}*/}
+        {/*    >*/}
+        {/*      <Line data={chartData} options={chartOptions} />*/}
+        {/*    </div>*/}
+        {/*  )}*/}
+
+        {/*  {chartData && !loadingChart && ( chartType === 'Histogram' )  && (*/}
+        {/*    <div style={{*/}
+        {/*      background: '#393939',*/}
+        {/*      padding: '1.5rem',*/}
+        {/*      borderRadius: '12px',*/}
+        {/*      border: 'none',*/}
+        {/*      boxShadow: 'inset 0 0 0.5px rgba(255,255,255,0.1), 0 8px 24px rgba(0,0,0,0.3)',*/}
+        {/*      animation: 'fadeInChart 1s ease-in',*/}
+        {/*      margin: '3rem auto',*/}
+        {/*      width: '100%',*/}
+        {/*      maxWidth: '83%',*/}
+        {/*    }}*/}
+        {/*    >*/}
+        {/*      <GenerateHistogram data={videoArtificialData} binNumber={7}/>*/}
+        {/*    </div>*/}
+        {/*  )}*/}
+
+        {/*  {chartData && !loadingChart && ( chartType === 'Scatter' ) && (*/}
+        {/*    <div style={{*/}
+        {/*      background: '#393939',*/}
+        {/*      padding: '1.5rem',*/}
+        {/*      borderRadius: '12px',*/}
+        {/*      border: 'none',*/}
+        {/*      boxShadow: 'inset 0 0 0.5px rgba(255,255,255,0.1), 0 8px 24px rgba(0,0,0,0.3)',*/}
+        {/*      animation: 'fadeInChart 1s ease-in',*/}
+        {/*      margin: '3rem auto',*/}
+        {/*      width: '100%',*/}
+        {/*      maxWidth: '83%',*/}
+        {/*    }}*/}
+        {/*    >*/}
+        {/*      <ScatterPlot videosData={videoArtificialData} />*/}
+        {/*    </div>*/}
+        {/*  )*/}
+        {/*  }*/}
+        {/*</div>*/}
+
         <div style={chartCardStyle}>
-          {chartData && !loadingChart && ( chartType === 'Line' ) && (
-            <div style={{
-              background: '#393939',
-              padding: '1.5rem',
-              borderRadius: '12px',
-              border: 'none',
-              boxShadow: 'inset 0 0 0.5px rgba(255,255,255,0.1), 0 8px 24px rgba(0,0,0,0.3)',
-              alignItems: 'center',
-              margin: '3rem auto',
-              animation: 'fadeInChart 1s ease-in',
-              width: '100%',
-              maxWidth: '83%',
-            }}
-            >
-              <Line data={chartData} options={chartOptions} />
+          {chartType === 'Line' && (
+            <div style={chartWrapperStyle}>
+              {chartData && !loadingChart ? (
+                <Line data={chartData} options={chartOptions} />
+              ) : (
+                <p style={{ color: '#bbb', textAlign: 'center' }}>
+                  {persistentNavigatingFromHistory
+                    ? 'Video data was not fetched in the previous analysis.'
+                    : 'There was an error fetching the video data.'}
+                </p>
+              )}
             </div>
           )}
 
-          {chartData && !loadingChart && ( chartType === 'Histogram' )  && (
-            <div style={{
-              background: '#393939',
-              padding: '1.5rem',
-              borderRadius: '12px',
-              border: 'none',
-              boxShadow: 'inset 0 0 0.5px rgba(255,255,255,0.1), 0 8px 24px rgba(0,0,0,0.3)',
-              animation: 'fadeInChart 1s ease-in',
-              margin: '3rem auto',
-              width: '100%',
-              maxWidth: '83%',
-            }}
-            >
-              <GenerateHistogram data={videoArtificialData} binNumber={7}/>
+          {chartType === 'Histogram' && (
+            <div style={chartWrapperStyle}>
+              {videoArtificialData && videoArtificialData.length > 0 && !loadingChart ? (
+                <GenerateHistogram data={videoArtificialData} binNumber={7} />
+              ) : (
+                <p style={{ color: '#bbb', textAlign: 'center' }}>
+                  {persistentNavigatingFromHistory
+                    ? 'Video data was not fetched in the previous analysis.'
+                    : 'There was an error fetching the video data.'}
+                </p>
+              )}
             </div>
           )}
 
-          {chartData && !loadingChart && ( chartType === 'Scatter' ) && (
-            <div style={{
-              background: '#393939',
-              padding: '1.5rem',
-              borderRadius: '12px',
-              border: 'none',
-              boxShadow: 'inset 0 0 0.5px rgba(255,255,255,0.1), 0 8px 24px rgba(0,0,0,0.3)',
-              animation: 'fadeInChart 1s ease-in',
-              margin: '3rem auto',
-              width: '100%',
-              maxWidth: '83%',
-            }}
-            >
-              <ScatterPlot videosData={videoArtificialData} />
+          {chartType === 'Scatter' && (
+            <div style={chartWrapperStyle}>
+              {videoArtificialData && videoArtificialData.length > 0 && !loadingChart ? (
+                <ScatterPlot videosData={videoArtificialData} />
+              ) : (
+                <p style={{ color: '#bbb', textAlign: 'center' }}>
+                  {persistentNavigatingFromHistory
+                    ? 'Video data was not fetched in the previous analysis.'
+                    : 'There was an error fetching the video data.'}
+                </p>
+              )}
             </div>
-          )
-          }
+          )}
         </div>
+
       </div>
     </div>
   );

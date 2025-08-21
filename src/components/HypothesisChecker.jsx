@@ -39,7 +39,8 @@ function WelchSatterthwaiteTtest (prevData, prevVar, prevAvg, newData, newVar, n
 const HypothesisChecker = () => {
   const {
     videoArtificialData,
-    selectedTimeframe
+    selectedTimeframe,
+    persistentNavigatingFromHistory,
   } = useContext(AppContext);
 
   const viewsData = videoArtificialData;
@@ -141,41 +142,51 @@ const HypothesisChecker = () => {
   else if (!error && tTestResult === 0) result = "No significant difference in performance has been detected at the 95% confidence level.";
 
   return (
-      <>
-        <div className='statcard'>
-          {viewsData.length < 1 ? <p><strong>The youtuber hasn't uploaded enough videos.</strong></p> : ''}
-          {error ? <p>{result}</p> : ''}
+    <>
+      <div className='statcard'>
+        {(!viewsData || viewsData.length < 2) ? (
+          <p style={{ color: '#bbb', fontSize: '18px', lineHeight: '1.6', textAlign: 'center' }}>
+            {persistentNavigatingFromHistory
+              ? "Video data was not fetched in the previous analysis."
+              : "The YouTuber hasn't uploaded enough videos or there was an error fetching data."}
+          </p>
+        ) : (
+          <>
+            {error && <p>{result}</p>}
 
-          {!error && (
-            <>
-              <p><strong>Average views before {cutoffDate.toDateString()}:</strong> {Number(prevAvg / numberLabel(prevAvg).divide).toFixed(2)}{numberLabel(prevAvg).ac}</p>
-              <p><strong>Average views after {cutoffDate.toDateString()}:</strong> {Number(newAvg / numberLabel(newAvg).divide).toFixed(2)}{numberLabel(newAvg).ac}</p>
-              <p><strong>Standard Deviation in views before {cutoffDate.toDateString()}:</strong> {Number(Math.sqrt(prevVar) / numberLabel(Math.sqrt(prevVar)).divide).toFixed(2)}{numberLabel(Math.sqrt(prevVar)).ac}</p>
-              <p><strong>Standard Deviation in views after {cutoffDate.toDateString()}:</strong> {Number(Math.sqrt(newVar) / numberLabel(Math.sqrt(newVar)).divide).toFixed(2)}{numberLabel(Math.sqrt(newVar)).ac}</p>
-            </>
-          )}
-        </div>
+            {!error && (
+              <>
+                <p><strong>Average views before {cutoffDate.toDateString()}:</strong> {Number(prevAvg / numberLabel(prevAvg).divide).toFixed(2)}{numberLabel(prevAvg).ac}</p>
+                <p><strong>Average views after {cutoffDate.toDateString()}:</strong> {Number(newAvg / numberLabel(newAvg).divide).toFixed(2)}{numberLabel(newAvg).ac}</p>
+                <p><strong>Standard Deviation in views before {cutoffDate.toDateString()}:</strong> {Number(Math.sqrt(prevVar) / numberLabel(Math.sqrt(prevVar)).divide).toFixed(2)}{numberLabel(Math.sqrt(prevVar)).ac}</p>
+                <p><strong>Standard Deviation in views after {cutoffDate.toDateString()}:</strong> {Number(Math.sqrt(newVar) / numberLabel(Math.sqrt(newVar)).divide).toFixed(2)}{numberLabel(Math.sqrt(newVar)).ac}</p>
+              </>
+            )}
+          </>
+        )}
+      </div>
 
-        <div
-          style={{
-            display: (testStats && !error) ? 'block' : 'none',
-          }}
-          className='statcard'
-        >
-          {testStats && !error && (
-            <>
-              <div style={{textAlign: 'center'}}>
-                <h2 style={{ marginTop: '1rem', marginBottom: '1.5rem', color: '#c8201f' }}>Welch-Satterthwaite's t-Test</h2>
-              </div>
-              <p><strong>t Statistic value:</strong> {Number(testStats.tValue).toFixed(3)}</p>
-              <p><strong>Degrees of Freedom (df):</strong> {Number(testStats.df).toFixed(3)}</p>
-              <p><strong>Critical t value:</strong> {Number(testStats.tCritical).toFixed(3)}</p>
-              <p>{result}</p>
-            </>
-          )}
-        </div>
-      </>
-      );
+      <div
+        style={{
+          display: (testStats && !error) ? 'block' : 'none',
+        }}
+        className='statcard'
+      >
+        {testStats && !error && (
+          <>
+            <div style={{ textAlign: 'center' }}>
+              <h2 style={{ marginTop: '1rem', marginBottom: '1.5rem', color: '#c8201f' }}>Welch-Satterthwaite's t-Test</h2>
+            </div>
+            <p><strong>t Statistic value:</strong> {Number(testStats.tValue).toFixed(3)}</p>
+            <p><strong>Degrees of Freedom (df):</strong> {Number(testStats.df).toFixed(3)}</p>
+            <p><strong>Critical t value:</strong> {Number(testStats.tCritical).toFixed(3)}</p>
+            <p>{result}</p>
+          </>
+        )}
+      </div>
+    </>
+  );
+
 };
 
 export default HypothesisChecker;

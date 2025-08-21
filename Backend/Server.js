@@ -4,6 +4,8 @@ import cors from 'cors';
 import Video from './Models/VideoStats.js';
 import History from './Models/MainHistory.js';
 import Channel  from './Models/ChannelStats.js';
+import ConsistencyStats from './Models/ConsistencyStats.js';
+
 const app = express();
 const mongoURI = 'mongodb://localhost:27018/yt_analyzer'
 
@@ -114,6 +116,44 @@ app.get('/api/channel/:sessionId/:channelId/:time', async (req, res) => {
     const channels = await Channel.find({ sessionId, channelId, time });
     res.json(channels);
   } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/consistency', async (req, res) => {
+  try {
+    const data = req.body;
+    const stats = new ConsistencyStats(data);
+    const saved = await stats.save();
+    res.status(201).json(saved);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/consistency/:sessionId/:channelId/:time', async (req, res) => {
+  const { sessionId, channelId, time } = req.params;
+  try {
+    const stats = await ConsistencyStats.findOne({ sessionId, channelId, time });
+    res.json(stats);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/history/:sessionId/:channelId/:time', async (req, res) => {
+  const { sessionId, channelId, time } = req.params;
+  try {
+    const decodedTime = decodeURIComponent(time);
+
+    await History.deleteMany({ sessionId, channelId, time: decodedTime });
+    await Video.deleteMany({ sessionId, channelId, time: decodedTime });
+    await Channel.deleteMany({ sessionId, channelId, time: decodedTime });
+    await ConsistencyStats.deleteMany({ sessionId, channelId, time: decodedTime });
+
+    res.status(200).json({ message: 'History and all associated data deleted successfully.' });
+  } catch (err) {
+    console.error('Failed to delete:', err);
     res.status(500).json({ error: err.message });
   }
 });

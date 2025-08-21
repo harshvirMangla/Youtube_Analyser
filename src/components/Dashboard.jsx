@@ -137,11 +137,20 @@ const Dashboard = () => {
       setHasSaved(true);
       saveAnalysis();
     }
-    else {
-      console.log('⚠️ No data to save or data not ready');
-      setHasSaved(false);
-    }
-  }, [videoArtificialData]);
+  }, [videoArtificialData, hasSaved, navigatingFromHistory]);
+
+  // useEffect(() => {
+  //   if (Array.isArray(videoArtificialData) && videoArtificialData.length > 0 && !hasSaved && !navigatingFromHistory) {
+  //     console.log('📤 Saving in Database');
+  //     setHasSaved(true);
+  //     saveAnalysis();
+  //   }
+  //   else {
+  //     console.log('⚠️ No data to save or data not ready');
+  //     setHasSaved(false);
+  //   }
+  // }, [videoArtificialData]);
+
 
   function generateFakeYouTubeData(count = 100) {
     const fakeData = [];
@@ -179,9 +188,11 @@ const Dashboard = () => {
       // let allStats = [];
       // console.log(`Stats Length: ${allStats.length}`);
 
-      if (!chartData && inputChanged) {
+      if (!chartData && (inputChanged || navigatingFromHistory)) {
         let allStats = [];
-        if (!navigatingFromHistory) {
+
+        const dataAlreadyExists = videoArtificialData && videoArtificialData.length > 0;
+        if (!dataAlreadyExists) {
           console.log('Not Navigating from History');
           setInputChanged(false);
           let videoIds = [];
@@ -225,6 +236,11 @@ const Dashboard = () => {
           // console.log("I don't have chart Data");
           // allStats = generateFakeYouTubeData(100);
           setVideoArtificialData(allStats);
+        }
+        else {
+          console.log('Navigating from History - Using existing data');
+          allStats = videoArtificialData;
+          setInputChanged(false);
         }
 
         let sortedData = allStats
